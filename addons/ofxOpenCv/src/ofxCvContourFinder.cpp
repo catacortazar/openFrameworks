@@ -2,17 +2,15 @@
 #include "ofxCvContourFinder.h"
 
 
-
 //--------------------------------------------------------------------------------
 bool sort_carea_compare( const CvSeq* a, const CvSeq* b) {
 	// use opencv to calc size, then sort based on size
 	float areaa = fabs(cvContourArea(a, CV_WHOLE_SEQ));
 	float areab = fabs(cvContourArea(b, CV_WHOLE_SEQ));
-
+	
     //return 0;
 	return (areaa > areab);
 }
-
 
 
 
@@ -115,6 +113,11 @@ int ofxCvContourFinder::findContours( ofxCvGrayscaleImage&  input,
 		blobs[i].boundingRect.height      = rect.height;
 		blobs[i].centroid.x 			  = (myMoments->m10 / myMoments->m00);
 		blobs[i].centroid.y 			  = (myMoments->m01 / myMoments->m00);
+		
+		blobs[i].id						= i;
+		blobs[i].center.x				= blobs[i].boundingRect.x + (blobs[i].boundingRect.width / 2.0);
+		blobs[i].center.y				= blobs[i].boundingRect.y + (blobs[i].boundingRect.height/ 2.0);
+		blobs[i].perim					= (rect.height*2.0)+(rect.height*2.0);
 
 		// get the points for the blob:
 		CvPoint           pt;
@@ -123,14 +126,17 @@ int ofxCvContourFinder::findContours( ofxCvGrayscaleImage&  input,
 
     	for( int j=0; j < cvSeqBlobs[i]->total; j++ ) {
 			CV_READ_SEQ_ELEM( pt, reader );
+			//printf(">> BLOB[%d] cvpt xy[%d/%d]\n",i,pt.x,pt.y);
             blobs[i].pts.push_back( ofPoint((float)pt.x, (float)pt.y) );
 		}
 		blobs[i].nPts = blobs[i].pts.size();
 
+		blobs[i].update();
 	}
-
+	
+	
     nBlobs = blobs.size();
-
+	
 	// Free the storage memory.
 	// Warning: do this inside this function otherwise a strange memory leak
 	if( contour_storage != NULL ) { cvReleaseMemStorage(&contour_storage); }
