@@ -151,6 +151,7 @@ void ofTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBExten
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(texData.textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(texData.textureTarget, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap (FBO)
 	
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -407,15 +408,36 @@ void ofTexture::setTextureMinMagFilter(GLint minFilter, GLint maxFilter){
 
 
 //----------------------------------------------------------
-void ofTexture::draw(float x, float y, float w, float h){
+void ofTexture::draw(ofPoint p, float w, float h){
+	draw(p.x, p.y, p.z, w, h);
+}
 
+//----------------------------------------------------------
+void ofTexture::draw(float x, float y, float w, float h){
+	draw(x, y, 0.0f, w, h);
+}
+
+//----------------------------------------------------------
+void ofTexture::draw(float x, float y, float z, float w, float h){
+	
+	// Enable alpha channel if has one
+	bool blending = ofGetStyle().blending;
+	if (texData.glType == GL_RGBA && blending == false)
+		ofEnableAlphaBlending();
+	
+	// make sure we are on unit 0 - we may change this when setting shader samplers
+	// before glEnable or else the shader gets confused
+	/// ps: maybe if bUsingArbTex is enabled we should use glActiveTextureARB?
+	glActiveTexture(GL_TEXTURE0);
+
+	// Enable texturing
 	glEnable(texData.textureTarget);
 
 	// bind the texture
 	glBindTexture( texData.textureTarget, (GLuint)texData.textureID );
 
-		GLfloat px0 = 0;		// up to you to get the aspect ratio right
-		GLfloat py0 = 0;
+		GLfloat px0 = 0.0f;		// up to you to get the aspect ratio right
+		GLfloat py0 = 0.0f;
 		GLfloat px1 = w;
 		GLfloat py1 = h;
 
@@ -461,8 +483,8 @@ void ofTexture::draw(float x, float y, float w, float h){
 		// to constantly add a 2 pixel border on all uploaded images
 		// is insane..
 
-		GLfloat offsetw = 0;
-		GLfloat offseth = 0;
+		GLfloat offsetw = 0.0f;
+		GLfloat offseth = 0.0f;
 
 		if (texData.textureTarget == GL_TEXTURE_2D && bTexHackEnabled) {
 			offsetw = 1.0f / (texData.tex_w);
@@ -477,7 +499,7 @@ void ofTexture::draw(float x, float y, float w, float h){
 
 	glPushMatrix(); 
 	
-		glTranslatef(x,y,0.0f);
+		glTranslatef(x,y,z);
 		
 		GLfloat tex_coords[] = {
 			tx0,ty0,
@@ -501,12 +523,26 @@ void ofTexture::draw(float x, float y, float w, float h){
 
 	glPopMatrix();
 	glDisable(texData.textureTarget);
+
+	// Disable alpha channel if it was disabled
+	if (texData.glType == GL_RGBA && blending == false)
+		ofDisableAlphaBlending();
 }
 
 
 //----------------------------------------------------------
+void ofTexture::draw(ofPoint p){
+	draw(p.x, p.y, p.z, texData.width, texData.height);
+}
+
+//----------------------------------------------------------
 void ofTexture::draw(float x, float y){
-	draw(x,y,texData.width, texData.height);
+	draw(x, y, 0.0f, texData.width, texData.height);
+}
+
+//----------------------------------------------------------
+void ofTexture::draw(float x, float y, float z){
+	draw(x, y, z, texData.width, texData.height);
 }
 
 //----------------------------------------------------------
