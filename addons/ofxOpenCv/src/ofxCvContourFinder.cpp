@@ -67,8 +67,8 @@ int ofxCvContourFinder::findContours( ofxCvGrayscaleImage&  input,
         inputCopy.allocate( _width, _height );
 	}
 
-    inputCopy = input;
     inputCopy.setROI( input.getROI() );
+    inputCopy = input;
 
 	CvSeq* contour_list = NULL;
 	contour_storage = cvCreateMemStorage( 1000 );
