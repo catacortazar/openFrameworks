@@ -240,6 +240,21 @@ unsigned char* ofxCvGrayscaleImage::getRoiPixels() {
 }
 
 
+//
+// Get just one pixel
+unsigned char ofxCvGrayscaleImage::getColor(ofPoint *p)
+{
+	return this->getColor((int)p->x, (int)p->y);
+}
+unsigned char ofxCvGrayscaleImage::getColor(float x, float y)
+{
+	if (tex.texData.bAllocated == false || pixels == NULL || x < 0 || x >= width || y < 0 || y >= height)
+		return 0;
+	int i = ( (y * width) + x);
+	return pixels[i];
+}
+
+
 // Draw Image
 
 
