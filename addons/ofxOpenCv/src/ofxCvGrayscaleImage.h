@@ -71,7 +71,10 @@ class ofxCvGrayscaleImage : public ofxCvImage {
     virtual unsigned char*  getPixels();
     virtual unsigned char*  getRoiPixels();
     // virtual IplImage*  getCvImage();                                        //in base class
-
+	
+	// Get just one pixel
+	unsigned char getColor(ofPoint *p);
+	unsigned char getColor(float x, float y);
 
     // Draw Image
     //
