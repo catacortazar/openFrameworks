@@ -46,12 +46,18 @@ class ofImage : public ofBaseImage{
 
 		// copying:
 		void 				clone(const ofImage &mom);
+		void 				clone(const ofImage &mom, ofRectangle *bounds);
+		void 				clone(const ofImage &mom, int x, int y, int w, int h);
 
 		// enable or disable using the texture of this image
 		void 				setUseTexture(bool bUse);
 
 		//for getting a reference to the texture
 		ofTexture & getTextureReference();
+
+		// quick texture binding shortcut
+		void bind();
+		void unbind();
 
 		// file loading / saving
 		bool 				loadImage(string fileName);
@@ -66,6 +72,9 @@ class ofImage : public ofBaseImage{
 		void 				resize(int newWidth, int newHeight);
 		void 				grabScreen(int x, int y, int w, int h);		// grab pixels from opengl, using glreadpixels
 
+		void 				keyOut(int hexColor);						// turn off alpha for this color
+		void 				keyOut(int r, int g, int b);				// turn off alpha for this color
+	
 		// if you've altered the pixels (from getPixels()) call update() to see a change:
 		void				update();
 
@@ -77,8 +86,12 @@ class ofImage : public ofBaseImage{
         void				resetAnchor();								//resets the anchor to (0, 0)
 
 		// draw:
+		void 				draw(ofPoint p, float w, float h);
 		void 				draw(float x, float y, float w, float h);
+		void 				draw(float x, float y, float z, float w, float h);
+		void 				draw(ofPoint p);
 		void 				draw(float x, float y);
+		void 				draw(float x, float y, float z);
 
 		float 				getHeight();
 		float 				getWidth();

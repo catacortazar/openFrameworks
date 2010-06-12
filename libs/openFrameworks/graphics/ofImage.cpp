@@ -97,6 +97,13 @@ void ofImage::resetAnchor(){
 }
 
 //------------------------------------
+void ofImage::draw(ofPoint _p, float _w, float _h){
+	if (bUseTexture){
+		tex.draw(_p, _w, _h);
+	}
+}
+
+//------------------------------------
 void ofImage::draw(float _x, float _y, float _w, float _h){
 	if (bUseTexture){
 		tex.draw(_x, _y, _w, _h);
@@ -104,8 +111,25 @@ void ofImage::draw(float _x, float _y, float _w, float _h){
 }
 
 //------------------------------------
+void ofImage::draw(float _x, float _y, float _z, float _w, float _h){
+	if (bUseTexture){
+		tex.draw(_x, _y, _z, _w, _h);
+	}
+}
+
+//------------------------------------
+void ofImage::draw(ofPoint p){
+	draw(p.x,p.y,p.z,myPixels.width,myPixels.height);
+}
+
+//------------------------------------
 void ofImage::draw(float x, float y){
 	draw(x,y,myPixels.width,myPixels.height);
+}
+
+//------------------------------------
+void ofImage::draw(float x, float y, float z){
+	draw(x,y,z,myPixels.width,myPixels.height);
 }
 
 //------------------------------------
@@ -177,6 +201,20 @@ ofTexture & ofImage::getTextureReference(){
 	return tex;
 }
 
+//----------------------------------------------------------
+void ofImage::bind(){
+	if (bUseTexture && tex.bAllocated())
+		tex.bind();
+}
+
+//----------------------------------------------------------
+void ofImage::unbind(){
+	if (bUseTexture && tex.bAllocated())
+		tex.unbind();
+}
+
+
+
 //------------------------------------
 void  ofImage::setFromPixels(unsigned char * newPixels, int w, int h, int newType, bool bOrderIsRGB){
 
@@ -219,9 +257,32 @@ void  ofImage::setFromPixels(unsigned char * newPixels, int w, int h, int newTyp
 	update();
 }
 
+// turn off alpha for this color
+//------------------------------------
+void ofImage::keyOut(int hexColor){
+	int r = (hexColor >> 16) & 0xff;
+	int g = (hexColor >> 8) & 0xff;
+	int b = (hexColor >> 0) & 0xff;
+	this->keyOut(r,g,b);
+}
+
+//------------------------------------
+void ofImage::keyOut(int r, int g, int b){
+	if (!myPixels.bAllocated || type != OF_IMAGE_COLOR_ALPHA)
+		return;
+	for (int n = 0 ; n < (myPixels.width*myPixels.height) ; n++)
+	{
+		unsigned char *p = &(myPixels.pixels[n*4]);
+		unsigned char a = ( (p[0]==r && p[1]==g && p[2]==b) ? 0 : 255 );
+		p[3] = a;
+	}
+	this->update();
+}
+
+
 //------------------------------------
 void ofImage::update(){
-
+	
 	if (myPixels.bAllocated == true && bUseTexture == true){
 		tex.loadData(myPixels.pixels, myPixels.width, myPixels.height, myPixels.glDataType);
 	}
@@ -280,16 +341,41 @@ void ofImage::grabScreen(int _x, int _y, int _w, int _h){
 
 //------------------------------------
 void ofImage::clone(const ofImage &mom){
-
+	
 	allocatePixels(myPixels, mom.width, mom.height, mom.bpp);
 	memcpy(myPixels.pixels, mom.myPixels.pixels, myPixels.width*myPixels.height*myPixels.bytesPerPixel);
-
+	
 	tex.clear();
 	bUseTexture = mom.bUseTexture;
 	if (bUseTexture == true){
 		tex.allocate(myPixels.width, myPixels.height, myPixels.glDataType);
 	}
+	
+	update();
+}
 
+//------------------------------------
+void ofImage::clone(const ofImage &mom, ofRectangle *rect){
+	this->clone(mom, (int)rect->x, (int)rect->y, (int)rect->width, (int)rect->height);
+}
+
+//------------------------------------
+void ofImage::clone(const ofImage &mom, int x, int y, int w, int h){
+	
+	allocatePixels(myPixels, w, h, mom.bpp);
+	for (int n = 0 ; n < h ; n++)
+	{
+		int ixMe = (n * myPixels.width) * myPixels.bytesPerPixel;
+		int ixMom = (((y+n) * mom.width) + x) * myPixels.bytesPerPixel;
+		memcpy(&(myPixels.pixels[ixMe]), &(mom.myPixels.pixels[ixMom]), w*myPixels.bytesPerPixel);
+	}
+	
+	tex.clear();
+	bUseTexture = mom.bUseTexture;
+	if (bUseTexture == true){
+		tex.allocate(myPixels.width, myPixels.height, myPixels.glDataType);
+	}
+	
 	update();
 }
 
