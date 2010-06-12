@@ -95,6 +95,7 @@ class ofImage : public ofBaseImage{
 
 		float 				getHeight();
 		float 				getWidth();
+		bool 				bAllocated() {return myPixels.bAllocated;};
 
 		int 				width, height, bpp;		// w,h, bits per pixel
 		int					type;					// OF_IMAGE_GRAYSCALE, OF_IMAGE_COLOR, OF_IMAGE_COLOR_ALPHA
