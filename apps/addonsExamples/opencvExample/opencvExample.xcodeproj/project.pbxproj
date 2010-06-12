@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		DBBB987A11C31FD900FE7995 /* ofxCvBlob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBBB987511C31FD900FE7995 /* ofxCvBlob.cpp */; };
-		DBBB987B11C31FD900FE7995 /* ofxCvBlobTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBBB987611C31FD900FE7995 /* ofxCvBlobTracker.cpp */; };
 		DBBB987C11C31FD900FE7995 /* ofxCvHull.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBBB987811C31FD900FE7995 /* ofxCvHull.cpp */; };
 		E44667570F5B3E04005D0BF0 /* ofxCvColorImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E446667D0F5B3E04005D0BF0 /* ofxCvColorImage.cpp */; };
 		E44667580F5B3E04005D0BF0 /* ofxCvContourFinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E44666800F5B3E04005D0BF0 /* ofxCvContourFinder.cpp */; };
@@ -87,8 +86,6 @@
 
 /* Begin PBXFileReference section */
 		DBBB987511C31FD900FE7995 /* ofxCvBlob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxCvBlob.cpp; sourceTree = "<group>"; };
-		DBBB987611C31FD900FE7995 /* ofxCvBlobTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxCvBlobTracker.cpp; sourceTree = "<group>"; };
-		DBBB987711C31FD900FE7995 /* ofxCvBlobTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxCvBlobTracker.h; sourceTree = "<group>"; };
 		DBBB987811C31FD900FE7995 /* ofxCvHull.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxCvHull.cpp; sourceTree = "<group>"; };
 		DBBB987911C31FD900FE7995 /* ofxCvHull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxCvHull.h; sourceTree = "<group>"; };
 		E446664F0F5B3E03005D0BF0 /* cv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cv.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/cv.h; sourceTree = SOURCE_ROOT; };
@@ -282,27 +279,25 @@
 		E446667B0F5B3E04005D0BF0 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E446668B0F5B3E04005D0BF0 /* ofxOpenCv.h */,
+				E44666880F5B3E04005D0BF0 /* ofxCvMain.h */,
+				E446667F0F5B3E04005D0BF0 /* ofxCvConstants.h */,
+				E446667C0F5B3E04005D0BF0 /* ofxCvBlob.h */,
 				DBBB987511C31FD900FE7995 /* ofxCvBlob.cpp */,
-				DBBB987611C31FD900FE7995 /* ofxCvBlobTracker.cpp */,
-				DBBB987711C31FD900FE7995 /* ofxCvBlobTracker.h */,
 				DBBB987811C31FD900FE7995 /* ofxCvHull.cpp */,
 				DBBB987911C31FD900FE7995 /* ofxCvHull.h */,
-				E446667C0F5B3E04005D0BF0 /* ofxCvBlob.h */,
-				E446667D0F5B3E04005D0BF0 /* ofxCvColorImage.cpp */,
 				E446667E0F5B3E04005D0BF0 /* ofxCvColorImage.h */,
-				E446667F0F5B3E04005D0BF0 /* ofxCvConstants.h */,
-				E44666800F5B3E04005D0BF0 /* ofxCvContourFinder.cpp */,
+				E446667D0F5B3E04005D0BF0 /* ofxCvColorImage.cpp */,
 				E44666810F5B3E04005D0BF0 /* ofxCvContourFinder.h */,
-				E44666820F5B3E04005D0BF0 /* ofxCvFloatImage.cpp */,
+				E44666800F5B3E04005D0BF0 /* ofxCvContourFinder.cpp */,
 				E44666830F5B3E04005D0BF0 /* ofxCvFloatImage.h */,
-				E44666840F5B3E04005D0BF0 /* ofxCvGrayscaleImage.cpp */,
+				E44666820F5B3E04005D0BF0 /* ofxCvFloatImage.cpp */,
 				E44666850F5B3E04005D0BF0 /* ofxCvGrayscaleImage.h */,
-				E44666860F5B3E04005D0BF0 /* ofxCvImage.cpp */,
+				E44666840F5B3E04005D0BF0 /* ofxCvGrayscaleImage.cpp */,
 				E44666870F5B3E04005D0BF0 /* ofxCvImage.h */,
-				E44666880F5B3E04005D0BF0 /* ofxCvMain.h */,
-				E44666890F5B3E04005D0BF0 /* ofxCvShortImage.cpp */,
+				E44666860F5B3E04005D0BF0 /* ofxCvImage.cpp */,
 				E446668A0F5B3E04005D0BF0 /* ofxCvShortImage.h */,
-				E446668B0F5B3E04005D0BF0 /* ofxOpenCv.h */,
+				E44666890F5B3E04005D0BF0 /* ofxCvShortImage.cpp */,
 			);
 			name = src;
 			path = ../../../addons/ofxOpenCv/src;
@@ -677,7 +672,6 @@
 				E446675B0F5B3E04005D0BF0 /* ofxCvImage.cpp in Sources */,
 				E446675C0F5B3E04005D0BF0 /* ofxCvShortImage.cpp in Sources */,
 				DBBB987A11C31FD900FE7995 /* ofxCvBlob.cpp in Sources */,
-				DBBB987B11C31FD900FE7995 /* ofxCvBlobTracker.cpp in Sources */,
 				DBBB987C11C31FD900FE7995 /* ofxCvHull.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
