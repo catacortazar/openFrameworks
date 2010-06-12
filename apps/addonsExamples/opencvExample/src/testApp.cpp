@@ -3,6 +3,7 @@
 
 //--------------------------------------------------------------
 void testApp::setup(){
+	ofSetDataPathRoot("data/");
 
 
 	#ifdef _USE_LIVE_VIDEO
@@ -85,6 +86,16 @@ void testApp::draw(){
 	// this is how to get access to them:
     for (int i = 0; i < contourFinder.nBlobs; i++){
         contourFinder.blobs[i].draw(360,540);
+		
+		// config hull drawing
+		//contourFinder.blobs[i].hull.bDrawHull = false;
+		contourFinder.blobs[i].hull.bDrawHullPoints = false;
+		//contourFinder.blobs[i].hull.bDrawConvexity = false;
+		//contourFinder.blobs[i].hull.bDrawConvexityPoints = false;
+		contourFinder.blobs[i].hull.bDrawDirection = false;
+
+		// Draw hull
+		contourFinder.blobs[i].hull.draw(360,540);
     }
 
 	// finally, a report:
