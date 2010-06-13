@@ -579,7 +579,6 @@ void ofCloseFreeImage(){
 //----------------------------------------------------
 bool ofImage::loadImageIntoPixels(string fileName, ofPixels &pix){
 
-
 	int					width, height, bpp;
 	fileName			= ofToDataPath(fileName);
 	bool bLoaded		= false;
@@ -712,10 +711,14 @@ float ofImage::getHeight(){
 float ofImage::getWidth(){
 	return width;
 }
-//----------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------
 
+//----------------------------------------------------------
+// Sosolimited: texture compression
+// call this function before you call loadImage()
+void ofImage::setCompression(ofTexCompression compression)
+{
+	tex.setCompression( compression );
+}
 
 
 

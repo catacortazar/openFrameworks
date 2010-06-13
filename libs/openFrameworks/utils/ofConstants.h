@@ -220,6 +220,7 @@ enum ofLogLevel{
 #include <string>
 #include <sstream>  //for ostringsream
 #include <iomanip>  //for setprecision
+#include <fstream>
 using namespace std;
 
 #ifndef PI
