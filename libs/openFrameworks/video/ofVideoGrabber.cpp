@@ -93,91 +93,130 @@ ofVideoGrabber::~ofVideoGrabber(){
 
 
 //--------------------------------------------------------------------
-void ofVideoGrabber::listDevices(){
+void ofVideoGrabber::scanDevices(){
+	
+	// Erase current grabbers
+	grabbers.clear();
+	
+	//---------------------------------
+#ifdef OF_VIDEO_CAPTURE_QUICKTIME
+	//---------------------------------
+	
+	bool bNeedToInitGrabberFirst = false;
+	
+	if (!bSgInited) bNeedToInitGrabberFirst = true;
+	
+	//if we need to initialize the grabbing component then do it
+	if( bNeedToInitGrabberFirst ){
+		if( !qtInitSeqGrabber() ){
+			return;
+		}
+	}
+	
+	/*
+	 //input selection stuff (ie multiple webcams)
+	 //from http://developer.apple.com/samplecode/SGDevices/listing13.html
+	 //and originally http://lists.apple.com/archives/QuickTime-API/2008/Jan/msg00178.html
+	 */
+	
+	SGDeviceList deviceList;
+	SGGetChannelDeviceList (gVideoChannel, sgDeviceListIncludeInputs, &deviceList);
+	
+	//this is our new way of enumerating devices
+	//quicktime can have multiple capture 'inputs' on the same capture 'device'
+	//ie the USB Video Class Video 'device' - can have multiple usb webcams attached on what QT calls 'inputs'
+	//The isight for example will show up as:
+	//USB Video Class Video - Built-in iSight ('input' 1 of the USB Video Class Video 'device')
+	//Where as another webcam also plugged whill show up as
+	//USB Video Class Video - Philips SPC 1000NC Webcam ('input' 2 of the USB Video Class Video 'device')
+	
+	//this means our the device ID we use for selection has to count both capture 'devices' and their 'inputs'
+	//this needs to be the same in our init grabber method so that we select the device we ask for
+	int deviceCount = 0;
+	
+	ofLog(OF_LOG_NOTICE, "scanning available capture devices");
+	for(int i = 0 ; i < (*deviceList)->count ; ++i)
+	{
+		ofGrabberData data;
+		
+		SGDeviceName nameRec;
+		nameRec = (*deviceList)->entry[i];
+		SGDeviceInputList deviceInputList = nameRec.inputs;
+		
+		int numInputs = 0;
+		if( deviceInputList ) numInputs = ((*deviceInputList)->count);
+		
+		memcpy(data.pascalName, (*deviceList)->entry[i].name, sizeof(char) * 256);
+		strcpy(data.name, p2cstr(data.pascalName));
+		
+		data.bAvailable =  (nameRec.flags != sgDeviceNameFlagDeviceUnavailable);
+		
+		//this means we can use the capture method
+		if(data.bAvailable){
+			
+			//if we have a capture 'device' (qt's word not mine - I would prefer 'system' ) that is ready to be used
+			//we go through its inputs to list all physical devices - as there could be more than one!
+			for(int j = 0; j < numInputs; j++){
 
+				//if our 'device' has inputs we get their names here
+				if( deviceInputList ){
+					SGDeviceInputName inputNameRec  = (*deviceInputList)->entry[j];
+					memcpy(data.pascalNameInput, inputNameRec.name, sizeof(char) * 256);
+					strcpy(data.nameInput, p2cstr(data.pascalNameInput));
+					// push available device
+					data.deviceID = deviceCount;
+					data.inputNumber = j;
+					grabbers.push_back(data);
+				}
+				//we count this way as we need to be able to distinguish multiple inputs as devices
+				deviceCount++;
+			}
+			
+		}else{
+			// push unavailable device
+			data.deviceID = deviceCount;
+			strcpy(data.nameInput, "");
+			grabbers.push_back(data);
+			
+			deviceCount++;
+		}
+	}
+	
+	//if we initialized the grabbing component then close it
+	if( bNeedToInitGrabberFirst ){
+		qtCloseSeqGrabber();
+	}
+	
+	//---------------------------------
+#endif
+	//---------------------------------
+}
+
+
+//--------------------------------------------------------------------
+void ofVideoGrabber::listDevices(){
+	
+		
 	//---------------------------------
 	#ifdef OF_VIDEO_CAPTURE_QUICKTIME
 	//---------------------------------
 
-		bool bNeedToInitGrabberFirst = false;
-
-		if (!bSgInited) bNeedToInitGrabberFirst = true;
-
-		//if we need to initialize the grabbing component then do it
-		if( bNeedToInitGrabberFirst ){
-			if( !qtInitSeqGrabber() ){
-				return;
-			}
-		}
-
-		printf("-------------------------------------\n");
-
-		/*
-			//input selection stuff (ie multiple webcams)
-			//from http://developer.apple.com/samplecode/SGDevices/listing13.html
-			//and originally http://lists.apple.com/archives/QuickTime-API/2008/Jan/msg00178.html
-		*/
-
-		SGDeviceList deviceList;
-		SGGetChannelDeviceList (gVideoChannel, sgDeviceListIncludeInputs, &deviceList);
-		unsigned char pascalName[256];
-		unsigned char pascalNameInput[256];
-
-		//this is our new way of enumerating devices
-		//quicktime can have multiple capture 'inputs' on the same capture 'device'
-		//ie the USB Video Class Video 'device' - can have multiple usb webcams attached on what QT calls 'inputs'
-		//The isight for example will show up as:
-		//USB Video Class Video - Built-in iSight ('input' 1 of the USB Video Class Video 'device')
-		//Where as another webcam also plugged whill show up as
-		//USB Video Class Video - Philips SPC 1000NC Webcam ('input' 2 of the USB Video Class Video 'device')
-
-		//this means our the device ID we use for selection has to count both capture 'devices' and their 'inputs'
-		//this needs to be the same in our init grabber method so that we select the device we ask for
-		int deviceCount = 0;
-
-		ofLog(OF_LOG_NOTICE, "listing available capture devices");
-		for(int i = 0 ; i < (*deviceList)->count ; ++i)
-		{
-			SGDeviceName nameRec;
-			nameRec = (*deviceList)->entry[i];
-			SGDeviceInputList deviceInputList = nameRec.inputs;
-
-			int numInputs = 0;
-			if( deviceInputList ) numInputs = ((*deviceInputList)->count);
-
-			memcpy(pascalName, (*deviceList)->entry[i].name, sizeof(char) * 256);
-
-			//this means we can use the capture method
-			if(nameRec.flags != sgDeviceNameFlagDeviceUnavailable){
-
-				//if we have a capture 'device' (qt's word not mine - I would prefer 'system' ) that is ready to be used
-				//we go through its inputs to list all physical devices - as there could be more than one!
-				for(int j = 0; j < numInputs; j++){
-
-
-					//if our 'device' has inputs we get their names here
-					if( deviceInputList ){
-						SGDeviceInputName inputNameRec  = (*deviceInputList)->entry[j];
-						memcpy(pascalNameInput, inputNameRec.name, sizeof(char) * 256);
-					}
-
-					printf( "device[%i] %s - %s\n",  deviceCount, p2cstr(pascalName), p2cstr(pascalNameInput) );
-
-					//we count this way as we need to be able to distinguish multiple inputs as devices
-					deviceCount++;
-				}
-
-			}else{
-				printf( "(unavailable) device[%i] %s\n",  deviceCount, p2cstr(pascalName) );
-				deviceCount++;
-			}
-		}
-		printf( "-------------------------------------\n");
-
-		//if we initialized the grabbing component then close it
-		if( bNeedToInitGrabberFirst ){
-			qtCloseSeqGrabber();
-		}
+	// refresh device list
+	this->scanDevices();
+	
+	printf("-------------------------------------\n");
+	ofLog(OF_LOG_NOTICE, "listing available capture devices");
+	for (int n = 0 ; n < grabbers.size() ; n++)
+	{
+		ofGrabberData data = grabbers[n];
+		if (data.bAvailable)
+			printf( "device[%i] %s - %s\n", data.deviceID, data.name, data.nameInput );
+		else
+			printf( "(unavailable) device[%i] %s\n",  data.deviceID, data.name );
+		
+	}
+	printf( "-------------------------------------\n");
+	
 
 	//---------------------------------
 	#endif
@@ -233,6 +272,36 @@ void ofVideoGrabber::setVerbose(bool bTalkToMe){
 	//---------------------------------
 	#endif
 	//---------------------------------
+}
+
+//--------------------------------------------------------------------
+int ofVideoGrabber::getDeviceIDByName(const char *name, bool exact){
+	if (grabbers.size() == 0)
+		this->scanDevices();
+	for (int n = 0 ; n < grabbers.size() ; n++)
+	{
+		ofGrabberData data = grabbers[n];
+		if ( (exact && !strcmp(data.nameInput,name)) || (!exact && strstr(data.nameInput,name)!=NULL) )
+			return data.deviceID;
+	}
+	// not found
+	return -1;
+}
+
+//--------------------------------------------------------------------
+bool ofVideoGrabber::setDeviceByName(const char *name, bool exact){
+	int deviceID = this->getDeviceIDByName(name, exact);
+	if (deviceID >= 0)
+	{
+		this->setDeviceID(deviceID);
+		ofLog(OF_LOG_NOTICE, "vidGrabber: Found device [%s] id [%d]\n",name,deviceID);
+		return true;
+	}
+	else
+	{
+		ofLog(OF_LOG_NOTICE, "vidGrabber: Device [%s] not found\n",name);
+		return false;
+	}
 }
 
 //--------------------------------------------------------------------
@@ -750,103 +819,60 @@ bool ofVideoGrabber::qtCloseSeqGrabber(){
 //--------------------------------------------------------------------
 bool ofVideoGrabber::qtSelectDevice(int deviceNumber, bool didWeChooseADevice){
 
-	//note - check for memory freeing possibly needed for the all SGGetChannelDeviceList mac stuff
-	// also see notes in listDevices() regarding new enunemeration method.
-
-	//Generate a device list and enumerate
-	//all devices availble to the channel
-	SGDeviceList deviceList;
-	SGGetChannelDeviceList(gVideoChannel, sgDeviceListIncludeInputs, &deviceList);
-
-	unsigned char pascalName[256];
-	unsigned char pascalNameInput[256];
-
-	int numDevices = (*deviceList)->count;
-	if(numDevices == 0){
+	if (grabbers.size() == 0)
+		this->scanDevices();
+	if (grabbers.size() == 0)
+	{
 		ofLog(OF_LOG_ERROR, "error: No catpure devices found");
 		return false;
 	}
-
-	int deviceCount = 0;
-	for(int i = 0 ; i < numDevices; ++i)
+	if (deviceNumber >= grabbers.size())
 	{
-		SGDeviceName nameRec;
-		nameRec = (*deviceList)->entry[i];
-		SGDeviceInputList deviceInputList = nameRec.inputs;
-
-		int numInputs = 0;
-		if( deviceInputList ) numInputs = ((*deviceInputList)->count);
-
-		memcpy(pascalName, (*deviceList)->entry[i].name, sizeof(char) * 256);
-		memset(pascalNameInput, 0, sizeof(char)*256);
-
-		//this means we can use the capture method
-		if(nameRec.flags != sgDeviceNameFlagDeviceUnavailable){
-
-			//if we have a capture 'device' (qt's word not mine - I would prefer 'system' ) that is ready to be used
-			//we go through its inputs to list all physical devices - as there could be more than one!
-			for(int j = 0; j < numInputs; j++){
-
-				//if our 'device' has inputs we get their names here
-				if( deviceInputList ){
-					SGDeviceInputName inputNameRec  = (*deviceInputList)->entry[j];
-					memcpy(pascalNameInput, inputNameRec.name, sizeof(char) * 256);
-				}
-
-				//if the device number matches we try and setup the device
-				//if we didn't specifiy a device then we will try all devices till one works!
-				if( deviceCount == deviceNumber || !didWeChooseADevice ){
-					ofLog(OF_LOG_NOTICE, "attempting to open device[%i] %s   -   %s",  deviceCount, p2cstr(pascalName), p2cstr(pascalNameInput) );
-
-					OSErr err1 = SGSetChannelDevice(gVideoChannel, pascalName);
-					OSErr err2 = SGSetChannelDeviceInput(gVideoChannel, j);
-
-					int successLevel = 0;
-
-					//if there were no errors then we have opened the device without issue
-					if ( err1 == noErr && err2 == noErr){
-						successLevel = 2;
-					}
-						//parameter errors are not fatal so we will try and open but will caution the user
-					else if ( (err1 == paramErr || err1 == noErr) && (err2 == noErr || err2 == paramErr) ){
-						successLevel = 1;
-					}
-
-					//the device is opened!
-					if ( successLevel > 0 ){
-
-						deviceName = (char *)p2cstr(pascalName);
-						deviceName  += "-";
-						deviceName +=  (char *)p2cstr(pascalNameInput);
-
-						if(successLevel == 2)ofLog(OF_LOG_NOTICE, "device opened successfully");
-						else ofLog(OF_LOG_WARNING, "device opened with some paramater errors - should be fine though!");
-
-						//no need to keep searching - return that we have opened a device!
-						return true;
-
-					}else{
-						//if we selected a device in particular but failed we want to go through the whole list again - starting from 0 and try any device.
-						//so we return false - and try one more time without a preference
-						if( didWeChooseADevice ){
-							ofLog(OF_LOG_WARNING, "problems setting device[%i] %s - %s *****", deviceNumber, p2cstr(pascalName), p2cstr(pascalNameInput));
-							return false;
-						}else{
-							ofLog(OF_LOG_WARNING, "unable to open device, trying next device");
-						}
-					}
-
-				}
-
-				//we count this way as we need to be able to distinguish multiple inputs as devices
-				deviceCount++;
-			}
+		ofLog(OF_LOG_ERROR, "error: Device [%d] not found",deviceNumber);
+		return false;
+	}
+	
+	// Get device 
+	ofGrabberData data = grabbers[deviceNumber];
+	if (!data.bAvailable)
+	{
+		ofLog(OF_LOG_ERROR, "error: Device [%d] unavailable",deviceNumber);
+		return false;
+	}
+	ofLog(OF_LOG_NOTICE, "attempting to open device[%i] %s - %s",  deviceNumber, data.name, data.nameInput );
+	
+	//OSErr err1 = SGSetChannelDevice(gVideoChannel, data.pascalName);
+	OSErr err1 = SGSetChannelDevice(gVideoChannel, data.pascalNameInput);		// use this when using multiple identical cameras on macam
+	OSErr err2 = SGSetChannelDeviceInput(gVideoChannel, data.inputNumber);
+	
+	int successLevel = 0;
+	
+	//if there were no errors then we have opened the device without issue
+	if ( err1 == noErr && err2 == noErr){
+		successLevel = 2;
+	}
+	//parameter errors are not fatal so we will try and open but will caution the user
+	else if ( (err1 == paramErr || err1 == noErr) && (err2 == noErr || err2 == paramErr) ){
+		successLevel = 1;
+	}
+	
+	//the device is opened!
+	if ( successLevel > 0 ){
+		if(successLevel == 2)ofLog(OF_LOG_NOTICE, "device opened successfully");
+		else ofLog(OF_LOG_WARNING, "device opened with some paramater errors - should be fine though!");
+		return true;
+	}else{
+		//if we selected a device in particular but failed we want to go through the whole list again - starting from 0 and try any device.
+		//so we return false - and try one more time without a preference
+		if( didWeChooseADevice ){
+			ofLog(OF_LOG_WARNING, "problems setting device[%i] %s - %s *****", deviceNumber, data.name, data.nameInput);
+			return false;
 		}else{
-			//ofLog(OF_LOG_ERROR, "(unavailable) device[%i] %s",  deviceCount, p2cstr(pascalName) );
-			deviceCount++;
+			ofLog(OF_LOG_WARNING, "unable to open device, trying next device");
 		}
 	}
 
+	
 	return false;
 }
 
@@ -856,7 +882,7 @@ bool ofVideoGrabber::qtSelectDevice(int deviceNumber, bool didWeChooseADevice){
 
 
 //--------------------------------------------------------------------
-bool ofVideoGrabber::initGrabber(int w, int h, bool setUseTexture){
+bool ofVideoGrabber::initGrabber(int w, int h, bool setUseTexture, bool bTryAny){
 	bUseTexture = setUseTexture;
 
 	//---------------------------------
@@ -902,13 +928,14 @@ bool ofVideoGrabber::initGrabber(int w, int h, bool setUseTexture){
 		//that device
 		if(didWeChooseADevice){
 			deviceIsSelected = qtSelectDevice(deviceID, true);
-			if(!deviceIsSelected && bVerbose) ofLog(OF_LOG_WARNING, "unable to open device[%i] - will attempt other devices", deviceID);
+			if(!deviceIsSelected && bVerbose) ofLog(OF_LOG_WARNING, "unable to open device[%i]", deviceID);
 		}
 
 		//if we couldn't select our required device
 		//or we aren't specifiying a device to setup
 		//then lets try to setup ANY device!
-		if(deviceIsSelected == false){
+		if(deviceIsSelected == false && bTryAny == true){
+			ofLog(OF_LOG_WARNING, "will now attempt first device on list...");
 			//lets list available devices
 			listDevices();
 
@@ -1122,6 +1149,11 @@ bool ofVideoGrabber::initGrabber(int w, int h, bool setUseTexture){
 	#endif
 	//---------------------------------
 
+}
+
+//------------------------------------
+bool ofVideoGrabber::isGrabbing(){
+	return bGrabberInited;
 }
 
 //------------------------------------

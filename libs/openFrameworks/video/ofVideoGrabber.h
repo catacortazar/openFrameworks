@@ -22,6 +22,21 @@
 	#include "ofGstUtils.h"
 #endif
 
+// Scanned devices
+typedef struct{
+	int deviceID;		// will be always the grabber index in the grabbers vector
+	int inputNumber;
+	bool bAvailable;
+	// qt string
+	unsigned char pascalName[256];
+	unsigned char pascalNameInput[256];
+	// regular c string
+	char name[256];
+	char nameInput[256];
+} ofGrabberData;
+
+
+
 // todo:
 // 		QT - callback, via SGSetDataProc - couldn't get this to work yet
 // 		image decompress options ala mung...
@@ -34,15 +49,19 @@ class ofVideoGrabber : public ofBaseVideo{
 		ofVideoGrabber();
 		virtual ~ofVideoGrabber();
 
+		void 			scanDevices();
 		void 			listDevices();
 		bool 			isFrameNew();
 		void			grabFrame();
 		void			close();
-		bool			initGrabber(int w, int h, bool bTexture = true);
+		bool			initGrabber(int w, int h, bool bTexture = true, bool bTryAny=true);
+		bool			isGrabbing();
 		void			videoSettings();
 		unsigned char 	* getPixels();
 		ofTexture &		getTextureReference();
 		void 			setVerbose(bool bTalkToMe);
+		int				getDeviceIDByName(const char *name, bool exact=false);
+		bool			setDeviceByName(const char *name, bool exact=false);
 		void			setDeviceID(int _deviceID);
 		void			setDesiredFrameRate(int framerate);
 		void 			setUseTexture(bool bUse);
@@ -74,6 +93,9 @@ class ofVideoGrabber : public ofBaseVideo{
 	    unsigned char * 		pixels;
 		int						attemptFramerate;
 		bool 					bIsFrameNew;
+	
+		// scanned devices
+		vector<ofGrabberData>	grabbers;
 
 		//--------------------------------- quicktime
 		#ifdef OF_VIDEO_CAPTURE_QUICKTIME
