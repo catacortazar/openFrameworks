@@ -206,11 +206,11 @@ void ofShader::setUniform (char * name, float v1, float v2, float v3, float v4){
 // vec4 usage: setUniform ("name", (float*)v, 4);
 void ofShader::setUniform (char * name, float *v, int count){
 	if (count == 2)
-		glUniform2fvARB(glGetUniformLocationARB(shader, name), count, v);
+		glUniform2fvARB(glGetUniformLocationARB(shader, name), count, (GLfloat*)v);
 	else if (count == 3)
-		glUniform3fvARB(glGetUniformLocationARB(shader, name), count, v);
+		glUniform3fvARB(glGetUniformLocationARB(shader, name), count, (GLfloat*)v);
 	else if (count == 4)
-		glUniform4fvARB(glGetUniformLocationARB(shader, name), count, v);
+		glUniform4fvARB(glGetUniformLocationARB(shader, name), count, (GLfloat*)v);
 	else
 		printf("ofShader::setUniform: Wrong size [%d]. Please use 2 (vec2), 3 (vec3) or 4 (vec4).\n",count);
 }
@@ -252,11 +252,11 @@ void ofShader::setUniform (char * name, int v1, int v2, int v3, int v4){
 // OBS: GLint is in fact a long
 void ofShader::setUniform (char * name, long *v, int count){
 	if (count == 2)
-		glUniform2ivARB(glGetUniformLocationARB(shader, name), count, v);
+		glUniform2ivARB(glGetUniformLocationARB(shader, name), count, (GLint*)v);
 	else if (count == 3)
-		glUniform3ivARB(glGetUniformLocationARB(shader, name), count, v);
+		glUniform3ivARB(glGetUniformLocationARB(shader, name), count, (GLint*)v);
 	else if (count == 4)
-		glUniform4ivARB(glGetUniformLocationARB(shader, name), count, v);
+		glUniform4ivARB(glGetUniformLocationARB(shader, name), count, (GLint*)v);
 	else
 		printf("ofShader::setUniform: Wrong size [%d]. Please use 2 (ivec2), 3 (ivec3) or 4 (ivec4).\n",count);
 }
