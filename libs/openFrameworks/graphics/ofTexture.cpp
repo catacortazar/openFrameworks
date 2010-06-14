@@ -112,6 +112,7 @@ void ofTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBExten
 	switch(texData.glTypeInternal) {
 #ifndef TARGET_OPENGLES	
 		case GL_RGBA32F_ARB:
+		case GL_RGBA16F_ARB:
 			texData.glType		= GL_RGBA;
 			texData.pixelType	= GL_FLOAT;
 			break;
@@ -163,11 +164,7 @@ void ofTexture::allocate(int w, int h, int internalGlDataType, bool bUseARBExten
 
 	texData.width = w;
 	texData.height = h;
-	#ifdef TARGET_OF_IPHONE
-		texData.bFlipTexture = true; // textures need to be flipped for the iphone
-	#else
-		texData.bFlipTexture = false;
-	#endif
+	texData.bFlipTexture = false;
 	texData.bAllocated = true;
 }
 
@@ -333,11 +330,7 @@ void ofTexture::loadData(void * data, int w, int h, int glDataType){
 	//------------------------ back to normal.
 	glPixelStorei(GL_UNPACK_ALIGNMENT, prevAlignment);
 
-	#ifdef TARGET_OF_IPHONE
-		texData.bFlipTexture = true; // textures need to be flipped for the iphone
-	#else
-		texData.bFlipTexture = false;
-	#endif
+	texData.bFlipTexture = false;
 
 }
 
@@ -410,11 +403,32 @@ void ofTexture::bind(){
 	//we could check if it has been allocated - but we don't do that in draw() 
 	glEnable(texData.textureTarget);
 	glBindTexture( texData.textureTarget, (GLuint)texData.textureID);
+	
+	if(ofGetUsingNormalizedTexCoords()) {
+		glMatrixMode(GL_TEXTURE);
+		glPushMatrix();
+		glLoadIdentity();
+		
+#ifndef TARGET_OPENGLES	
+		if(texData.textureTarget == GL_TEXTURE_RECTANGLE_ARB)
+			glScalef(texData.width, texData.height, 1.0f);
+		else 
+#endif			
+			glScalef(texData.width / texData.tex_w, texData.height / texData.tex_h, 1.0f);
+		
+		glMatrixMode(GL_MODELVIEW);  		
+	}
 }
 
 //----------------------------------------------------------
 void ofTexture::unbind(){
 	glDisable(texData.textureTarget);
+	
+	if(ofGetUsingNormalizedTexCoords()) {
+		glMatrixMode(GL_TEXTURE);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW); 
+	}
 }
 
 
@@ -425,13 +439,13 @@ ofPoint ofTexture::getCoordFromPoint(float xPos, float yPos){
 	
 	if (!bAllocated()) return temp;
 	
-	
+#ifndef TARGET_OPENGLES	
 	if (texData.textureTarget == GL_TEXTURE_RECTANGLE_ARB){
 		
 		temp.set(xPos, yPos);
 		
 	} else {
-		
+#endif		
 		// non arb textures are 0 to 1, so we 
 		// (a) convert to a pct: 
 		
@@ -445,7 +459,9 @@ ofPoint ofTexture::getCoordFromPoint(float xPos, float yPos){
 		
 		temp.set(pctx, pcty);
 
+#ifndef TARGET_OPENGLES	
 	}
+#endif		
 	
 	return temp;
 	
@@ -458,19 +474,20 @@ ofPoint ofTexture::getCoordFromPercent(float xPct, float yPct){
 	
 	if (!bAllocated()) return temp;
 
-	
+#ifndef TARGET_OPENGLES	
 	if (texData.textureTarget == GL_TEXTURE_RECTANGLE_ARB){
 		
 		temp.set(xPct * texData.width, yPct * texData.height);
 		
 	} else {
-	
+#endif	
 		xPct *= texData.tex_t;
 		yPct *= texData.tex_u;
 		temp.set(xPct, yPct);
 		
+#ifndef TARGET_OPENGLES	
 	}
-	
+#endif	
 	return temp;
 }
 
@@ -495,7 +512,6 @@ void ofTexture::setCompression(ofTexCompression compression){
 	texData.compressionType = compression;
 	if(compression!=OF_COMPRESS_NONE) texData.useCompression = true;
 }
-
 
 //----------------------------------------------------------
 void ofTexture::draw(ofPoint p, float w, float h){
