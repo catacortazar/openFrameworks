@@ -36,8 +36,8 @@ class ofShader{
 		void 	unload();
 		void 	setShaderActive(bool bActive);
 	
-		void 	apply(ofTexture *tex);
-		void 	apply(ofTexture *tex, ofTextureFBO *fbo);
+		void 	apply();
+		void 	apply(ofTextureFBO *fbo);
 	
 		///-------------------------------------------------------------------------------
 		//| Setters 
@@ -46,13 +46,13 @@ class ofShader{
 		void 	setUniform (char * name, float v1, float v2);
 		void 	setUniform (char * name, float v1, float v2, float v3);
 		void 	setUniform (char * name, float v1, float v2, float v3, float v4);
-		void 	setUniform (char * name, float *v, int qtd);
+		void 	setUniform (char * name, float *v, int count);
 		
 		void 	setUniform (char * name, int v1);
 		void 	setUniform (char * name, int v1, int v2);
 		void 	setUniform (char * name, int v1, int v2, int v3);
 		void 	setUniform (char * name, int v1, int v2, int v3, int v4);
-		void 	setUniform (char * name, int *v, int qtd);
+		void 	setUniform (char * name, long *v, int count);
 	
 		void 	setSampler (char * name, int unit, ofTexture *tex);
 	
@@ -88,6 +88,9 @@ class ofShader{
 		GLhandleARB 	vertexShader;
 		GLhandleARB 	fragmentShader;
 		GLhandleARB 	shader;
+	
+		char			name[255];
+		ofTexture		*tex0;
 		
 		bool			bLoaded;
 };

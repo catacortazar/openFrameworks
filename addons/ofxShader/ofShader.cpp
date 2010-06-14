@@ -78,6 +78,8 @@ void ofShader::loadShader(const char * fragmentName, const char * vertexName){
 		glAttachObjectARB(shader,fragmentShader);
 		glLinkProgramARB(shader);
 		
+		// texture on unit 0
+		tex0 = NULL;
 		
 		bLoaded = true;
 			
@@ -103,6 +105,8 @@ void ofShader::loadShader(const char * shaderName){
 	sprintf(fragmentName,"%s.frag", path);
 	sprintf(vertexName, "%s.vert", path);
 	loadShader(fragmentName, vertexName);
+	
+	strcpy(name, shaderName);
 }
 
 
@@ -141,23 +145,27 @@ void ofShader::setShaderActive(bool bActive){
 }
 
 // Apply Shader FX to the screen
-// tex0: Texture on unit 0
 //---------------------------------------------------------------
-void ofShader::apply(ofTexture *tex){
+void ofShader::apply(){
+	if (tex0 == NULL)
+	{
+		printf("ofshader:: [%s] texture unit 0 sampler not set!\n",name);
+		return;
+	}
 	// Draw quad
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_COLOR_MATERIAL);
 	ofSetColor(255,255,255,255);
-	tex->draw(0.0, 0.0);
+	tex0->draw(0.0, 0.0);
 }
 
-// Apply Shader FX directly to a FBO
+// Apply Shader FX to a FBO
 // BUT... It is faster to render the screen and then call myTex.loadScreenData(0, 0, ofGetWidth(), ofGetHeight());
 //---------------------------------------------------------------
-void ofShader::apply(ofTexture *tex, ofTextureFBO *fbo){
+void ofShader::apply(ofTextureFBO *fbo){
 	fbo->begin();
-	this->apply(tex);
+	this->apply();
 	fbo->end();
 }
 
@@ -193,18 +201,18 @@ void ofShader::setUniform (char * name, float v1, float v2, float v3, float v4){
 	}
 }
 
-// vec2 usage: setUniform ("name", (float*)v, 2);
+// vec2 usage: setUniform ("name", (float*)v, 2);count
 // vec3 usage: setUniform ("name", (float*)v, 3);
 // vec4 usage: setUniform ("name", (float*)v, 4);
-void ofShader::setUniform (char * name, float *v, int qtd){
-	if (qtd == 2)
-		this->setUniform(name, v[0], v[1]);
-	else if (qtd == 3)
-		this->setUniform(name, v[0], v[1], v[2]);
-	else if (qtd == 4)
-		this->setUniform(name, v[0], v[1], v[2], v[3]);
+void ofShader::setUniform (char * name, float *v, int count){
+	if (count == 2)
+		glUniform2fvARB(glGetUniformLocationARB(shader, name), count, v);
+	else if (count == 3)
+		glUniform3fvARB(glGetUniformLocationARB(shader, name), count, v);
+	else if (count == 4)
+		glUniform4fvARB(glGetUniformLocationARB(shader, name), count, v);
 	else
-		printf("ofShader::setUniform: Wrong size [%d]. Please use 2 (vec2), 3 (vec3) or 4 (vec4).\n",qtd);
+		printf("ofShader::setUniform: Wrong size [%d]. Please use 2 (vec2), 3 (vec3) or 4 (vec4).\n",count);
 }
 
 /*
@@ -238,18 +246,19 @@ void ofShader::setUniform (char * name, int v1, int v2, int v3, int v4){
 	}
 }
 
-// ivec2 usage: setUniform ("name", (int*)v, 2);
-// ivec3 usage: setUniform ("name", (int*)v, 3);
-// ivec4 usage: setUniform ("name", (int*)v, 4);
-void ofShader::setUniform (char * name, int *v, int qtd){
-	if (qtd == 2)
-		this->setUniform(name, v[0], v[1]);
-	else if (qtd == 3)
-		this->setUniform(name, v[0], v[1], v[2]);
-	else if (qtd == 4)
-		this->setUniform(name, v[0], v[1], v[2], v[3]);
+// ivec2 usage: setUniform ("name", (long*)v, 2);
+// ivec3 usage: setUniform ("name", (long*)v, 3);
+// ivec4 usage: setUniform ("name", (long*)v, 4);
+// OBS: GLint is in fact a long
+void ofShader::setUniform (char * name, long *v, int count){
+	if (count == 2)
+		glUniform2ivARB(glGetUniformLocationARB(shader, name), count, v);
+	else if (count == 3)
+		glUniform3ivARB(glGetUniformLocationARB(shader, name), count, v);
+	else if (count == 4)
+		glUniform4ivARB(glGetUniformLocationARB(shader, name), count, v);
 	else
-		printf("ofShader::setUniform: Wrong size [%d]. Please use 2 (ivec2), 3 (ivec3) or 4 (ivec4).\n",qtd);
+		printf("ofShader::setUniform: Wrong size [%d]. Please use 2 (ivec2), 3 (ivec3) or 4 (ivec4).\n",count);
 }
 
 
@@ -267,6 +276,9 @@ void ofShader::setSampler (char * name, int unit, ofTexture *tex)
 	glBindTexture(tex->texData.textureTarget, tex->texData.textureID);	// bind to unit
 	glActiveTexture(GL_TEXTURE0);										// move back to default unit
 	this->setUniform(name, (int)unit);									// send unit to shader as int
+	// save texture on unit 0 for apply()
+	if (unit == 0)
+		tex0 = tex;
 }
 
 
