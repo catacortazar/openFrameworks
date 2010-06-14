@@ -1,5 +1,4 @@
 #include "ofShader.h"
-#include "ofx3DUtils.h"
 
 
 char *textFileRead(const char *fn);		// some memory allocation happens here
