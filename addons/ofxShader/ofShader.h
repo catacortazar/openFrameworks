@@ -3,7 +3,7 @@
 
 
 #include "ofMain.h"
-#include "ofTextureFBO.h"
+#include "ofxFBOTexture.h"
 
 
 
@@ -37,7 +37,7 @@ class ofShader{
 		void 	setShaderActive(bool bActive);
 	
 		void 	apply();
-		void 	apply(ofTextureFBO *fbo);
+		void 	apply(ofxFBOTexture *fbo);
 	
 		///-------------------------------------------------------------------------------
 		//| Setters 

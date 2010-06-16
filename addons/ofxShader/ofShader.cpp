@@ -163,7 +163,7 @@ void ofShader::apply(){
 // Apply Shader FX to a FBO
 // BUT... It is faster to render the screen and then call myTex.loadScreenData(0, 0, ofGetWidth(), ofGetHeight());
 //---------------------------------------------------------------
-void ofShader::apply(ofTextureFBO *fbo){
+void ofShader::apply(ofxFBOTexture *fbo){
 	fbo->begin();
 	this->apply();
 	fbo->end();
