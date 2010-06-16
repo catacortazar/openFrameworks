@@ -164,6 +164,12 @@ float * ofBgColorPtr(){
 }
 
 //----------------------------------------------------------
+void ofBackground(int hexColor, float _a){
+	ofBackground ( (hexColor >> 16) & 0xff, (hexColor >> 8) & 0xff, (hexColor >> 0) & 0xff, _a);
+}
+
+
+//----------------------------------------------------------
 void ofBackground(int r, int g, int b, int a){
 	bgColor[0] = (float)r / (float)255.0f;
 	bgColor[1] = (float)g / (float)255.0f;
@@ -384,6 +390,11 @@ void ofLine(float x1,float y1,float z1,float x2,float y2,float z2){
 	// back to normal, if smoothness is on
 	if (bSmoothHinted) endSmoothing();
 	
+}
+
+//----------------------------------------------------------
+void ofRect(ofRectangle r){
+	ofRect(r.x, r.y, 0.0f, r.width, r.height);
 }
 
 //----------------------------------------------------------

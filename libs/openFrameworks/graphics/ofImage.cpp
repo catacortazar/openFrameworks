@@ -97,6 +97,13 @@ void ofImage::resetAnchor(){
 }
 
 //------------------------------------
+void ofImage::draw(ofRectangle _r){
+	if (bUseTexture){
+		tex.draw(_r);
+	}
+}
+
+//------------------------------------
 void ofImage::draw(ofPoint _p, float _w, float _h){
 	if (bUseTexture){
 		tex.draw(_p, _w, _h);
@@ -124,7 +131,7 @@ void ofImage::draw(ofPoint p){
 
 //------------------------------------
 void ofImage::draw(float x, float y){
-	draw(x,y,myPixels.width,myPixels.height);
+	draw(x,y,0.0f,myPixels.width,myPixels.height);
 }
 
 //------------------------------------

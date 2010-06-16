@@ -514,6 +514,11 @@ void ofTexture::setCompression(ofTexCompression compression){
 }
 
 //----------------------------------------------------------
+void ofTexture::draw(ofRectangle r){
+	draw(r.x, r.y, 0.0f, r.width, r.height);
+}
+
+//----------------------------------------------------------
 void ofTexture::draw(ofPoint p, float w, float h){
 	draw(p.x, p.y, p.z, w, h);
 }

@@ -71,6 +71,7 @@ class ofTexture : public ofBaseDraws{
 	void setAnchorPoint(float x, float y); //set the anchor point in pixels
 	void resetAnchor(); //resets the anchor to (0, 0)
 
+	void draw(ofRectangle r);
 	void draw(ofPoint p, float w, float h);
 	void draw(float x, float y, float w, float h);
 	void draw(float x, float y, float z, float w, float h);

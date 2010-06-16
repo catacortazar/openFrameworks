@@ -8,6 +8,7 @@
 
 // bg color
 float * ofBgColorPtr();
+void ofBackground(int hexColor, float _a=255.0f);
 void ofBackground(int r, int g, int b, int a=255);
 
 // user's access to settings (bgAuto, corner mode):
@@ -61,6 +62,7 @@ void ofLine(ofPoint p1, ofPoint p2);
 void ofLine(float x1,float y1,float x2,float y2);
 void ofLine(float x1,float y1,float z1,float x2,float y2,float z2);
 
+void ofRect(ofRectangle r);
 void ofRect(ofPoint p,float w,float h);
 void ofRect(float x1,float y1,float w,float h);
 void ofRect(float x,float y,float z,float w,float h);
