@@ -701,7 +701,7 @@ inline float ofxVec2f::squareLength() const {
 * This is a signed relative angle between -180 and 180.
 */
 inline float ofxVec2f::angle( const ofxVec2f& vec ) const {
-	return (float)(atan2( x*vec.y-y*vec.x, x*vec.x + y*vec.y )*RAD_TO_DEG);
+	return (this->angleRad(vec)*RAD_TO_DEG);
 }
 
 /**
@@ -709,7 +709,8 @@ inline float ofxVec2f::angle( const ofxVec2f& vec ) const {
 * This is a signed relative angle between -180 and 180.
 */
 inline float ofxVec2f::angleRad( const ofxVec2f& vec ) const {
-	return atan2( x*vec.y-y*vec.x, x*vec.x + y*vec.y );
+	//return atan2( x*vec.y-y*vec.x, x*vec.x + y*vec.y );
+	return -atan2( vec.y-y, vec.x-x );
 }
 
 
