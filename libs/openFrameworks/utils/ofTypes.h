@@ -346,7 +346,11 @@ public:
 		height = vol.height;
 		depth = vol.depth;
 	}
-
+	
+	void set(const float& val){
+		x = y = z = width = height = depth = 0.0;
+	}
+	
 	//------ Operators:
 	
 	//Set
@@ -357,6 +361,11 @@ public:
 		width = vol.width;
 		height = vol.height;
 		depth = vol.depth;
+		return *this;
+	}
+
+	ofVolume & operator=(const float& val){
+		x = y = z = width = height = depth = 0.0;
 		return *this;
 	}
 	
@@ -413,6 +422,13 @@ class ofColor{
         b = color.b;
         a = color.a;
     }
+
+	ofColor( int hexColor, float _a=255.0f){
+		r = (hexColor >> 16) & 0xff;
+		g = (hexColor >> 8) & 0xff;
+		b = (hexColor >> 0) & 0xff;
+        a = _a;
+    }
 	
 	void set(float _r, float _g, float _b, float _a = 255.0f){
         r = _r;
@@ -431,6 +447,13 @@ class ofColor{
         g = color.g;
         b = color.b;
         a = color.a;
+    }
+	
+    void set(int hexColor, float _a=255.0f){
+		r = (hexColor >> 16) & 0xff;
+		g = (hexColor >> 8) & 0xff;
+		b = (hexColor >> 0) & 0xff;
+        a = _a;
     }
 	
 	// clamp channels between 0.0 and 255.0
