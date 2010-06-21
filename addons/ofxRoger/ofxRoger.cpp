@@ -11,6 +11,7 @@
 #include "ofx3DUtils.h"
 
 
+
 ////////////////////////////////////////////////////////////////
 //
 // 3D Geometry
@@ -101,6 +102,75 @@ void capture_frame(int f)
 	ofSaveScreen(str);
 }
 
+
+
+
+/////////////////////////////
+//
+// CHARSET BRASIL
+//
+// ESTE ARQUIVO E QUALQUER ARQUIVO COM LETRAS BRASILEIRAS DEVEM TER...
+// File Encoding = Western (Mac OS Roman)
+// (XCode: File > Get Info)
+//
+unsigned char charBR[][2] =
+{
+{'á', 225},	// 225	á
+{'à', 224},	// 224	à
+{'â', 226},	// 226	â
+{'ã', 227},	// 227	ã
+{'Á', 193},	// 193	Á
+{'À', 192},	// 192	À
+{'Â', 194},	// 194	Â
+{'Ã', 195},	// 195	Ã
+{'é', 233},	// 233	é
+{'ê', 234},	// 234	ê
+{'É', 201},	// 201	É
+{'Ê', 202},	// 202	Ê
+{'í', 237},	// 237	í
+{'Í', 205},	// 205	Í
+{'ó', 243},	// 243	ó
+{'ô', 244},	// 244	ô
+{'õ', 245},	// 245	õ
+{'Ó', 211},	// 211	Ó
+{'Ô', 212},	// 212	Ô
+{'Õ', 213},	// 213	Õ
+{'ú', 250},	// 250	ú
+{'ü', 252},	// 252	ü
+{'Ú', 218},	// 218	Ú
+{'Ü', 220},	// 220	Ü
+{'ç', 231},	// 231	ç
+{'Ç', 199},	// 199	Ç
+{'\0', 0}
+};
+
+// Retorna a string com os caracteres brasileiros corretos
+char* stringBR(char *str)
+{
+	static char strBR[255];
+	unsigned char c, cbr;
+	int n, br;
+	
+	for (n = 0 ; n < strlen(str) ; n++)
+	{
+		c = str[n];
+		// look for char
+		for (br = 0 ; charBR[br][0] != '\0' ; br++)
+		{
+			cbr = charBR[br][0];
+			if (c == cbr)
+			{
+				strBR[n] = charBR[br][1];
+				break;
+			}
+		}
+		// not found
+		if (charBR[br][0] == '\0')
+			strBR[n] = c;
+	}
+	strBR[n] = '\0';
+	return strBR;
+}
 
 
 

@@ -17,3 +17,5 @@ void draw_fps(bool filled=false);
 // Capture
 void capture_frame(int f);
 
+// Charset Brasil
+char* stringBR(char *str);
