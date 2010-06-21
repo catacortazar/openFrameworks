@@ -20,6 +20,7 @@ ofxCvContourFinder::ofxCvContourFinder() {
     _height = 0;
 	myMoments = (CvMoments*)malloc( sizeof(CvMoments) );
 	reset();
+	this->disableContourDrawing();
 }
 
 //--------------------------------------------------------------------------------
@@ -134,8 +135,33 @@ int ofxCvContourFinder::findContours( ofxCvGrayscaleImage&  input,
 		blobs[i].update();
 	}
 	
-	
     nBlobs = blobs.size();
+	
+	// Draw contours to an image
+	if (bDrawContour)
+	{
+		// Allocate drawing
+		if( contourDrawing.getWidth() == 0 ) {
+			contourDrawing.allocate( _width, _height );
+		} else if( contourDrawing.getWidth() != _width || contourDrawing.getHeight() != _height ) {
+			// reallocate to new size
+			contourDrawing.clear();
+			contourDrawing.allocate( _width, _height );
+		}
+		// erase
+		contourDrawing.set(0);
+		// Draw found blobs
+		for( int i = 0 ; i < nBlobs ; i++ ) {
+			cvDrawContours(contourDrawing.getCvImage(),
+						   cvSeqBlobs[i],
+						   contourColor,
+						   contourHoleColor,
+						   contourMaxLevel,
+						   contourThickness,
+						   contourLineType,
+						   contourOffset );
+		}
+	}
 	
 	// Free the storage memory.
 	// Warning: do this inside this function otherwise a strange memory leak
@@ -145,6 +171,35 @@ int ofxCvContourFinder::findContours( ofxCvGrayscaleImage&  input,
 	return nBlobs;
 
 }
+
+//--------------------------------------------------------------------------------
+void ofxCvContourFinder::enableContourDrawing(unsigned char color,
+											  unsigned char holeColor,
+											  int maxLevel,
+											  int thickness,
+											  int lineType,
+											  ofPoint offset){
+	bDrawContour = true;
+	//contourExternalColor = cvScalar((double)contourColor,(double)contourColor,(double)contourColor,255.0);
+	//contourHoleColor = cvScalar((double)holeColor,(double)holeColor,(double)holeColor,255.0);
+	contourColor = cvScalarAll((double)color);
+	contourHoleColor = cvScalarAll((double)holeColor);
+	contourMaxLevel = maxLevel;
+	contourThickness = thickness;
+	contourLineType = lineType;
+	contourOffset = cvPoint((int)offset.x, (int)offset.y);
+}
+
+//--------------------------------------------------------------------------------
+void ofxCvContourFinder::disableContourDrawing(){
+	bDrawContour = false;
+}
+
+//--------------------------------------------------------------------------------
+ofxCvGrayscaleImage ofxCvContourFinder::getContourDrawing(){
+	return contourDrawing;
+}
+
 
 //--------------------------------------------------------------------------------
 void ofxCvContourFinder::draw( float x, float y, float w, float h ) {
@@ -208,5 +263,6 @@ void ofxCvContourFinder::resetAnchor(){
     anchor.set(0,0);
     bAnchorIsPct = false;
 }
+
 
 

@@ -38,6 +38,15 @@ class ofxCvContourFinder : public ofBaseDraws {
                                // approximation = don't do points for all points 
                                // of the contour, if the contour runs
                                // along a straight line, for example...
+	
+	void enableContourDrawing(unsigned char color,
+							  unsigned char holeColor,
+							  int maxLevel,
+							  int thickness = 1,				// opencv default
+							  int lineType = 8,					// opencv default
+							  ofPoint offset = ofPoint(0,0));	// opencv default
+	virtual void disableContourDrawing();
+	virtual ofxCvGrayscaleImage getContourDrawing();
 
     virtual void  draw() { draw(0,0, _width, _height); };
     virtual void  draw( float x, float y ) { draw(x,y, _width, _height); };
@@ -59,6 +68,15 @@ class ofxCvContourFinder : public ofBaseDraws {
     CvMoments*              myMoments;
     vector<CvSeq*>          cvSeqBlobs;  //these will become blobs
     
+	bool					bDrawContour;			// should draw contours on findContours() ?
+    ofxCvGrayscaleImage     contourDrawing;			// the image drawn on the last call to findContours()
+	CvScalar				contourColor;			// paint contour with this color
+	CvScalar				contourHoleColor;		// paint holes with this color
+	int						contourMaxLevel;		// ??
+	int						contourThickness;		// CV_FILLED(-1) or the line thickness
+	int						contourLineType;		// 8=aliased, 4=blocky
+	CvPoint					contourOffset;			// something to do with ROI
+	
     ofPoint  anchor;
     bool  bAnchorIsPct;      
 
