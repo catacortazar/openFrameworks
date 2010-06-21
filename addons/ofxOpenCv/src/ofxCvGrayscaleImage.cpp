@@ -246,12 +246,13 @@ unsigned char ofxCvGrayscaleImage::getColor(ofPoint *p)
 {
 	return this->getColor((int)p->x, (int)p->y);
 }
-unsigned char ofxCvGrayscaleImage::getColor(float x, float y)
+unsigned char ofxCvGrayscaleImage::getColor(int x, int y)
 {
-	if (tex.texData.bAllocated == false || pixels == NULL || x < 0 || x >= width || y < 0 || y >= height)
+	unsigned char *myPixels = this->getPixels();
+	if (tex.texData.bAllocated == false || myPixels == NULL || x < 0 || x >= width || y < 0 || y >= height)
 		return 0;
 	int i = ( (y * width) + x);
-	return pixels[i];
+	return myPixels[i];
 }
 
 

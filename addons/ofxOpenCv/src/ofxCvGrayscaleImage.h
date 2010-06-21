@@ -74,7 +74,7 @@ class ofxCvGrayscaleImage : public ofxCvImage {
 	
 	// Get just one pixel
 	unsigned char getColor(ofPoint *p);
-	unsigned char getColor(float x, float y);
+	unsigned char getColor(int x, int y);
 
     // Draw Image
     //
