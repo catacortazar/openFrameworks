@@ -242,17 +242,33 @@ unsigned char* ofxCvGrayscaleImage::getRoiPixels() {
 
 //
 // Get just one pixel
-unsigned char ofxCvGrayscaleImage::getColor(ofPoint *p)
+unsigned char ofxCvGrayscaleImage::getPixel(ofPoint *p)
 {
-	return this->getColor((int)p->x, (int)p->y);
+	return this->getPixel((int)p->x, (int)p->y);
 }
-unsigned char ofxCvGrayscaleImage::getColor(int x, int y)
+unsigned char ofxCvGrayscaleImage::getPixel(int x, int y)
 {
 	unsigned char *myPixels = this->getPixels();
 	if (tex.texData.bAllocated == false || myPixels == NULL || x < 0 || x >= width || y < 0 || y >= height)
 		return 0;
 	int i = ( (y * width) + x);
 	return myPixels[i];
+}
+
+
+//
+// Set just one pixel
+void ofxCvGrayscaleImage::setPixel(ofPoint *p, unsigned char color)
+{
+	this->setPixel((int)p->x, (int)p->y, color);
+}
+void ofxCvGrayscaleImage::setPixel(int x, int y, unsigned char color)
+{
+	unsigned char *myPixels = this->getPixels();
+	if (tex.texData.bAllocated == false || myPixels == NULL || x < 0 || x >= width || y < 0 || y >= height)
+		return;
+	int i = ( (y * width) + x);
+	myPixels[i] = color;
 }
 
 

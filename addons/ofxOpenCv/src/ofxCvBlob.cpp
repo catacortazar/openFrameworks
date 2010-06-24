@@ -20,39 +20,6 @@ ofxCvBlob::ofxCvBlob() {
 }
 
 //----------------------------------------
-void ofxCvBlob::update()
-{
-	CvPoint cvpt;
-	ofPoint ofpt;
-
-	// Create blob points storage
-	CvMemStorage* prStore = cvCreateMemStorage();
-	CvSeq* ptSeq = cvCreateSeq( CV_SEQ_KIND_GENERIC|CV_32SC2,
-							   sizeof(CvContour),
-							   sizeof(CvPoint),
-							   prStore );
-	
-	// Gather blob points
-	cvClearSeq(ptSeq);
-	for( int n = 0; n < pts.size(); n++ )
-	{
-		ofpt = pts[n];
-		cvpt.x = (int) ofpt.x;
-		cvpt.y = (int) ofpt.y;
-		cvSeqPush( ptSeq, &cvpt );
-		//printf("BLOB[%d] pt[%n] cv[%d/%d] ofpt[%.2f/%.2f]\n",i,n,cvpt.x,cvpt.y,ofpt.x,ofpt.y);
-	}
-	
-	// Update Hull
-	hull.update(ptSeq, this);
-	
-	// Free blob points
-	cvClearSeq(ptSeq);
-	cvReleaseMemStorage( &prStore );
-}
-
-
-//----------------------------------------
 void ofxCvBlob::draw(float x, float y){
 	ofNoFill();
 	

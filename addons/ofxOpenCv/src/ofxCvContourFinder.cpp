@@ -132,9 +132,10 @@ int ofxCvContourFinder::findContours( ofxCvGrayscaleImage&  input,
 		}
 		blobs[i].nPts = blobs[i].pts.size();
 
-		blobs[i].update();
+		// Find Hull
+		blobs[i].hull.update(cvSeqBlobs[i], &(blobs[i]));
 	}
-	
+	// Save blob count
     nBlobs = blobs.size();
 	
 	// Draw contours to an image
