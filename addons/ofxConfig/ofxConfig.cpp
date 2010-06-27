@@ -323,7 +323,7 @@ void ofxConfig::set(int id, int i, float val)		// Private
 			sprintf(p->string, "%.2f",val);
 			break;
 		default:
-			printf("Config.set(int) ERROR invalid id[%d] type[%d] val[%d]\n",id,p->type,val);
+			printf("Config.set(int) ERROR invalid id[%d] type[%d] val[%d]\n",id,p->type,(int)val);
 			break;
 	};
 }
@@ -455,7 +455,7 @@ float ofxConfig::get(int id, int i)		// Private
 			return atof(p->string);
 			break;
 		default:
-			printf("Config.get(int) ERROR invalid id[%d] type[%d] val[%d]\n",id,p->type);
+			printf("Config.get(int) ERROR invalid id[%d] type[%d]\n",id,p->type);
 			break;
 	};
 }
