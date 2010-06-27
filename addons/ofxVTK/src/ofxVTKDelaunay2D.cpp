@@ -46,6 +46,7 @@ void ofxVTKDelaunay2D::setBoundaryPoint(int i){
 // Make mesh from points
 //----------------------------------------
 void ofxVTKDelaunay2D::update(){
+	
 	// Store points
 	vtkSmartPointer<vtkPolyData> pointsPolyData = vtkSmartPointer<vtkPolyData>::New();
 	pointsPolyData->SetPoints(points);
@@ -64,7 +65,9 @@ void ofxVTKDelaunay2D::update(){
 	delaunay->SetInput ( pointsPolyData );
 	delaunay->SetSource ( boundaryPolyData );
 	delaunay->Update();
-	
+	unsigned long error =  delaunay->GetErrorCode();
+	//printf("DELAUNAY ERROR [%d]\n",error);
+
 	// mesh data pointers
 	vtkPolyData *data = delaunay->GetOutput();		// vtk mesh data
 	vtkCellArray *cells = data->GetPolys();			// each cell is a triangle
