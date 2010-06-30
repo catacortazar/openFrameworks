@@ -46,8 +46,10 @@ ofxConfig::ofxConfig()
 	// init midi
 #ifdef CFG_USE_MIDI
 	midiOut = new ofxMidiOut();
+	midiOut->setVerbose(false);
 	midiIn = new ofxMidiIn();
 	midiIn->addListener(this);
+	midiIn->setVerbose(false);
 	// midi comm
 	midiChannel = 1;
 	midiPort = midiIn->findMyDevicePort();
