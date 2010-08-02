@@ -1153,7 +1153,7 @@ bool ofVideoGrabber::initGrabber(int w, int h, bool setUseTexture, bool bTryAny)
 
 //------------------------------------
 bool ofVideoGrabber::isGrabbing(){
-	return bGrabberInited;
+	return (bGrabberInited && pixels != NULL);
 }
 
 //------------------------------------
