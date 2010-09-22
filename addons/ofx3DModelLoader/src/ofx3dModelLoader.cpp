@@ -47,6 +47,11 @@ void ofx3DModelLoader::setPosition(float x, float y, float z){
     pos.z = z;
 }
 
+void ofx3DModelLoader::setScale(float s){
+    scale.x = s;
+    scale.y = s;
+    scale.z = s;
+}
 void ofx3DModelLoader::setScale(float x, float y, float z){
     scale.x = x;
     scale.y = y;
