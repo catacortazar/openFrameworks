@@ -89,10 +89,10 @@ void testApp::draw(){
 		
 		// config hull drawing
 		//contourFinder.blobs[i].hull.bDrawHull = false;
-		contourFinder.blobs[i].hull.bDrawHullPoints = false;
+		//contourFinder.blobs[i].hull.bDrawHullPoints = false;
 		//contourFinder.blobs[i].hull.bDrawConvexity = false;
 		//contourFinder.blobs[i].hull.bDrawConvexityPoints = false;
-		contourFinder.blobs[i].hull.bDrawDirection = false;
+		//contourFinder.blobs[i].hull.bDrawDirection = false;
 
 		// Draw hull
 		contourFinder.blobs[i].hull.draw(360,540);
