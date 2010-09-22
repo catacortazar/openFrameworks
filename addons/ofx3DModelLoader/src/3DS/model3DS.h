@@ -141,6 +141,7 @@ private:
     GLuint m_texcoordsArrayId;
 
 	unsigned int m_drawMode;
+	
 
 public:
 
@@ -164,6 +165,9 @@ public:
 	void setMaterial(const std::string &newMat){m_materialName = newMat;}
     void setName(const std::string newName){m_name = newName;}
 	void setDrawMode(const unsigned int newDrawMode){m_drawMode = newDrawMode;}
+	
+	// ROGER
+	ofColor color;
 };
 
    //////////////////////////////////////////////////////////////////
@@ -175,6 +179,7 @@ typedef struct{
 	float minX,maxX;
 	float minY,maxY;
 	float minZ,maxZ;
+	float width,height,depth;
 } boundingBox3DS;
 
 class model3DS : public ofx3DBaseLoader{
@@ -184,9 +189,6 @@ private:
     std::vector<mesh3DS> m_meshes;
     std::map<std::string, material3DS> m_materials;
 	unsigned int m_drawMode;
-	boundingBox3DS m_boundingBox;
-	float m_scale;
-	float m_centerX, m_centerY, m_centerZ;
 
 	// temporaries used while reading chunks
 	mesh3DS *m_currentMesh;
@@ -197,7 +199,7 @@ private:
 	float m_tempFloat;
 	std::string m_tempString;
 
-	void readChunk(std::ifstream *modelFile, const int objectStart, const int objectLength);
+	void readChunk(std::ifstream *modelFile, const int objectStart, const int objectLength, int chunkDepth);
 
 	// Private copy and assignment constructors
 	// to prevent object being copied
@@ -205,13 +207,22 @@ private:
 	model3DS &operator=(const model3DS &model);
 
 public:
+	boundingBox3DS m_boundingBox;
+	float m_scale;
+	float m_centerX, m_centerY, m_centerZ;
+
 	model3DS();
 	void loadModel(const char* filename, float scale = 1);
 	void loadModel(string filename, float scale);	
     void draw();
+    void drawBoundingBox();
 
     std::string getFilename(){return m_filename;}
 	const material3DS& getMaterial(const std::string &matName){return m_materials[matName];}
+	
+	// ROGER
+	bool randomColor;
+
 };
 
 #endif //MODEL3DS_H
