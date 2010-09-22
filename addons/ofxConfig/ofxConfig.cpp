@@ -11,7 +11,7 @@
 // BASE CONFIG CLASS
 //
 //  Config class v1.0
-//  Manage configuration parameters + save as XML
+//  Manage configuration parameters + save as text file
 //  by Roger Sodre
 //
 //  Install:
@@ -27,42 +27,44 @@
 //
 //  TODO:
 //
+// - send string types on sendOsc()
+// - use c++ strigs
 //
 
 #include "ofxConfig.h"
-
-#define CAPTURE_FORMAT	"/Users/Roger/Desktop/CAPTURE/capture_%06d.jpg"
-
-#define VERBOSE_REC	1
-
+#include <exception>
+#include <errno.h>
 
 ofxConfig::ofxConfig()
 {
-	// init rec
-	isRecording = isPlaying = false;
-	recFrame = 0;
-	strcpy(saveTime,"using defaults");
+	// init
+	saveTime = "using defaults";
+	bCallback = false;
+	currentFileName = this->getFullFilename("config.cfg");
 	
-	// init midi
-#ifdef CFG_USE_MIDI
+	// init MIDI
+	midiPort = 0;
+	midiChannel = 1;
+#ifdef CFG_USE_OFXMIDI
 	midiOut = new ofxMidiOut();
 	midiOut->setVerbose(false);
 	midiIn = new ofxMidiIn();
 	midiIn->addListener(this);
 	midiIn->setVerbose(false);
 	// midi comm
-	midiChannel = 1;
 	midiPort = midiIn->findMyDevicePort();
 	midiOut->openPort(midiPort);
 	midiIn->openPort(midiPort);
 #endif
 	
-	// Listen to picker movements
-	ofAddListener(ofEvents.mousePressed, this, &ofxConfig::mousePressed);
-	ofAddListener(ofEvents.mouseMoved, this, &ofxConfig::mouseMoved);
-	ofAddListener(ofEvents.mouseDragged, this, &ofxConfig::mouseDragged);
-	ofAddListener(ofEvents.mouseReleased, this, &ofxConfig::mouseReleased);
-	ofAddListener(ofEvents.draw, this, &ofxConfig::drawPickers);
+	// init OSC
+#ifdef CFG_USE_OFXOSC
+	bOscSend = false;
+	bOscReceive = false;
+#ifdef CFG_CATCH_LOOP_EVENTS
+	ofAddListener(ofEvents.update, this, &ofxConfig::oscCallback);
+#endif
+#endif
 	
 	// init XML
 	//xmlInOut = new XMLInOut(applet);
@@ -77,22 +79,34 @@ ofxConfig::~ofxConfig()
 			delete p;
 		params.pop_back();
 	}
-#ifdef CFG_USE_MIDI
+#ifdef CFG_USE_OFXMIDI
 	// free midi
 	delete midiIn;
 	delete midiOut;
 #endif
 }
 
+//
+// Update state
+//
+void ofxConfig::update()
+{
+#ifdef CFG_USE_OFXOSC
+#ifndef CFG_CATCH_LOOP_EVENTS
+	this->oscCallback();
+#endif
+#endif
+}
+
+
 /////////////////////////////////////////////////////////////////////////
 //
 // MIDI
 //
-#ifdef CFG_USE_MIDI
 void ofxConfig::setMidi(int id, short note)
 {
 	// Color: One note for all channels
-	if (params[id]->type == TYPE_COLOR)
+	if (params[id]->type == CFG_TYPE_COLOR)
 	{
 		params[id]->vec[0].midiNote = note;
 		params[id]->vec[1].midiNote = note;
@@ -118,32 +132,205 @@ void ofxConfig::setMidiMulti(int id, short note0, short note1, short note2)
 }
 //
 // ofxMidi virtual callback
+#ifdef CFG_USE_OFXMIDI
 void ofxConfig::newMidiMessage(ofxMidiEventArgs& eventArgs)
 {
 	int channel = eventArgs.channel;
 	int note = eventArgs.byteOne;
 	int val = eventArgs.byteTwo;
 	float prog = ((float)val / 127.0);
-	printf("MIDI IN ch[%d] note[%d] = [%d] prog[%.2f]",channel,note,val,prog);
-	
-	for (int n = 0 ; n < params.size() ; n++)
+	this->parseMidiMessage(channel, note, prog);
+}
+#endif
+//
+// PARSE MIDI message
+// used by OSC as well
+void ofxConfig::parseMidiMessage(int channel, int note, float prog)
+{
+	printf("MIDI IN ch[%d] note[%d] = [%.2f]",channel,note,prog);
+	for (int id = 0 ; id < params.size() ; id++)
 	{
-		if (params[n] == NULL)
+		if (params[id] == NULL)
 			continue;
-		ofxConfigParam *p = params.at(n);
-		for (int v = 0 ; v < 3 ; v++)
+		ofxConfigParam *p = params.at(id);
+		for (int i = 0 ; i < 3 ; i++)
 		{
-			if (p->vec[v].midiNote == note)
+			if (p->vec[i].midiNote == note)
 			{
-				p->vec[v].setProg(prog);
-				printf(" >> CFG id[%d/%d] = [%.3f] (%s)\n",n,v,p->vec[v].get(),p->name);
+				this->setProg(id, i, prog);
+				printf(" >> CFG id[%d/%d] = [%.3f] (%s)\n",id,i,p->vec[i].get(),p->name.c_str());
 				return;
 			}
 		}
 	}
 	printf(" >> unassigned\n");
 }
+
+//////////////////////////////////////////////////
+//
+// OSC
+//
+#ifdef CFG_USE_OFXOSC
+//
+// Enable/disable OSC
+// Send every param change thu OSC to another app with ofxConfig
+void ofxConfig::setOscSend(bool b, int port)
+{
+	bOscSend = b;
+	bOscReceive = !b;
+	this->switchOsc(port);
+}
+//
+// Enable/disable OSC
+// Receive params change from another app with ofxConfig
+// Receive MIDI as OSC from MidiAsOsc.app
+void ofxConfig::setOscReceive(bool b, int port)
+{
+	bOscReceive = b;
+	bOscSend = !b;
+	this->switchOsc(port);
+}
+// Turn OSC on/off
+void ofxConfig::switchOsc(int port)
+{
+	try {
+		if (bOscReceive)
+		{
+#ifndef CINDER
+			oscSender.shutdown();
 #endif
+			oscReceiver.setup( port );
+			sprintf(errmsg, "OSC RECEIVING PORT %d...",port);
+		}
+		else if (bOscSend)
+		{
+#ifndef CINDER
+			oscReceiver.shutdown();
+#endif
+			oscSender.setup( DEFAULT_OSC_HOST, port );
+			sprintf(errmsg, "OSC SENDING...");
+		}
+	} catch (exception &error) {
+		sprintf(errmsg, "OSC FAILED!!!!");
+		printf("OSC SETUP FAILED!!!\n");
+	}
+}
+//
+// Send params change to another app with ofxConfig
+void ofxConfig::sendOsc(short id, short i)
+{
+	// OSC Receive Disabled?
+	if (bOscSend == false)
+		return;
+	// Do not send string
+	if (params[id]->type == CFG_TYPE_STRING)
+		return;
+	// Send OSC
+	string addr = "/";
+	addr += this->getName(id);
+	ofxOscMessage m;
+	m.setAddress( addr );
+	m.addIntArg( (int)i );
+	if (params[id]->vec[i].preserveProg)
+	{
+		m.addStringArg( "P" );
+		m.addFloatArg( this->getProg(id, i) );
+	}
+	else
+	{
+		m.addStringArg( "V" );
+		m.addFloatArg( this->get(id, i) );
+	}
+	oscSender.sendMessage( m );
+#ifdef OSC_VERBOSE
+	printf("OSC OUT >> id[%d/%d] = [%.3f] (%s)\n",id,i,this->getProg(id, i),this->getName(id));
+#endif
+}
+//
+// PUSH ALL PARAMS to another app with ofxConfig
+void ofxConfig::pushOsc()
+{
+	for (int id = 0 ; id < params.size() ; id++)
+	{
+		if (params[id] == NULL)
+			continue;
+		for (int i = 0 ; i < 3 ; i++)
+			sendOsc(id, i);
+	}
+}
+//
+// ofxOsc callback
+// - Reads MIDI messages disguised as OSC forwarded from MidiAsOsc.app
+// - Reads PARAMS sent from another app using odxConfig
+#ifdef CFG_CATCH_LOOP_EVENTS
+void ofxConfig::oscCallback(ofEventArgs &e)
+{
+	this->oscCallback();
+}
+#endif
+void ofxConfig::oscCallback()
+{
+	// OSC Receive Disabled?
+	if (bOscReceive == false)
+		return;
+#ifdef OSC_VERBOSE
+	sprintf(errmsg, "OSC CALLBACK");
+#endif
+	// check for waiting messages
+	while( oscReceiver.hasWaitingMessages() )
+	{
+		// get the next message
+		ofxOscMessage m;
+		oscReceiver.getNextMessage( &m );
+		
+#ifdef OSC_VERBOSE
+		sprintf(errmsg, "OSC MSG [%s]", m.getAddress().c_str());
+#endif
+		// Receive from MisiAsOsc.app
+		// Format:	/midi channel note value
+		if ( m.getAddress() == "/midi" )
+		{
+			// both the arguments are int32's
+			int channel	= m.getArgAsInt32( 0 );
+			int note	= m.getArgAsInt32( 1 );
+			float val	= m.getArgAsFloat( 2 );
+#ifdef OSC_VERBOSE
+			printf("OSC IN: /midi channel[%d] note[%d] value[%f]\n",channel,note,val);
+#endif
+			this->parseMidiMessage(channel, note, val);
+		}
+		// Receive from another ofxConfig
+		// Format:	/PARAM_NAME ix P/V value
+		else
+		{
+			const char *name = m.getAddress().substr(1).c_str();
+			for (int id = 0 ; id < params.size() ; id++)
+			{
+				if (params[id] == NULL)
+					continue;
+				ofxConfigParam *p = params.at(id);
+				if (name == p->name)
+				{
+					int i		= m.getArgAsInt32( 0 );
+					string pv	= m.getArgAsString( 1 );
+					float val	= m.getArgAsFloat( 2 );
+					if (pv[0] == 'P')
+						this->setProg(id, i, val);
+					else // value
+						this->set(id, i, val);
+#ifdef OSC_VERBOSE
+					printf("OSC IN >> id[%d/%d] = [%.3f] (%s)\n",id,i,p->vec[i].get(),p->name.c_str());
+#endif
+					sprintf(errmsg, "OSC TO %s=%.3f", p->name.c_str(), p->vec[i].get());
+					return;
+				}
+			}
+		}
+	}
+	
+}
+#endif
+
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -166,13 +353,13 @@ bool ofxConfig::isNumber(int id)
 {
 	switch (params[id]->type)
 	{
-		case TYPE_FLOAT:
-		case TYPE_DOUBLE:
-		case TYPE_INTEGER:
-		case TYPE_LONG:
-		case TYPE_BYTE:
-		case TYPE_COLOR:
-		case TYPE_VECTOR:
+		case CFG_TYPE_FLOAT:
+		case CFG_TYPE_DOUBLE:
+		case CFG_TYPE_INTEGER:
+		case CFG_TYPE_LONG:
+		case CFG_TYPE_BYTE:
+		case CFG_TYPE_COLOR:
+		case CFG_TYPE_VECTOR:
 			return true;
 			break;
 	}
@@ -183,8 +370,8 @@ bool ofxConfig::isVector(int id)
 {
 	switch (params[id]->type)
 	{
-		case TYPE_COLOR:
-		case TYPE_VECTOR:
+		case CFG_TYPE_COLOR:
+		case CFG_TYPE_VECTOR:
 			return true;
 			break;
 	}
@@ -197,73 +384,80 @@ bool ofxConfig::isVector(int id)
 // INITTERS
 //
 // generic (float)
-void ofxConfig::add(short id, char *name, float val)
+void ofxConfig::add(short id, const char *name, float val)
 {
 	this->addFloat(id, name, val);
 }
 // specific
-void ofxConfig::addFloat(short id, char *name, float val)
+void ofxConfig::addFloat(short id, const char *name, float val)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_FLOAT, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_FLOAT, name));
 	this->set(id, val);
 }
-void ofxConfig::addDouble(short id, char *name, double val)
+void ofxConfig::addDouble(short id, const char *name, double val)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_DOUBLE, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_DOUBLE, name));
 	this->set(id, val);
 }
-void ofxConfig::addInt(short id, char *name, int val)
+void ofxConfig::addInt(short id, const char *name, int val)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_INTEGER, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_INTEGER, name));
 	this->set(id, val);
 }
-void ofxConfig::addLong(short id, char *name, long val)
+void ofxConfig::addLong(short id, const char *name, long val)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_LONG, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_LONG, name));
 	this->set(id, val);
 }
-void ofxConfig::addBool(short id, char *name, bool val)
+void ofxConfig::addBool(short id, const char *name, bool val)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_BOOLEAN, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_BOOLEAN, name));
 	this->setLimits(id, 0.0f, 1.0f);
 	this->set(id, val );
 }
-void ofxConfig::addByte(short id, char *name, unsigned char val)
+void ofxConfig::addByte(short id, const char *name, unsigned char val)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_BYTE, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_BYTE, name));
 	this->setLimits(id, (float)0, (float)255);
 	this->set(id, (float) val);
 }
-void ofxConfig::addString(short id, char *name, char *val)
+void ofxConfig::addString(short id, const char *name, const char *val)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_STRING, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_STRING, name));
 	this->set(id, val);
 }
-void ofxConfig::addColor(short id, char *name, int hex)
+#ifndef CINDER
+void ofxConfig::addColor(short id, const char *name, int hex)
 {
 	this->addColor(id, name, ofColor(hex));
 }
-void ofxConfig::addColor(short id, char *name, ofColor c)
+#endif
+void ofxConfig::addColor(short id, const char *name, ofColor c)
 {
 	this->addColor(id, name, c.r, c.g, c.b);
 }
-void ofxConfig::addColor(short id, char *name, float r, float g, float b)
+void ofxConfig::addColor(short id, const char *name, float r, float g, float b)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_COLOR, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_COLOR, name));
 	this->setLimitsR(id, 0.0f, 255.0f);
 	this->setLimitsG(id, 0.0f, 255.0f);
 	this->setLimitsB(id, 0.0f, 255.0f);
 	this->set(id, r, g, b);
 }
-void ofxConfig::addVector(short id, char *name, ofPoint p)
+void ofxConfig::addVector(short id, const char *name, ofPoint p)
 {
 	this->addVector(id, name, p.x, p.y, p.z);
 }
-void ofxConfig::addVector(short id, char *name, float x, float y, float z)
+void ofxConfig::addVector(short id, const char *name, float x, float y, float z)
 {
-	this->pushParam(id, new ofxConfigParam(TYPE_VECTOR, name));
+	this->pushParam(id, new ofxConfigParam(CFG_TYPE_VECTOR, name));
+#ifdef CINDER
+	this->setLimitsX(id, 0.0f, getWindowWidth());
+	this->setLimitsY(id, 0.0f, getWindowHeight());
+#else
 	this->setLimitsX(id, 0.0f, ofGetWidth());
 	this->setLimitsY(id, 0.0f, ofGetHeight());
+#endif
 	this->set(id, x, y, z);
 }
 
@@ -284,6 +478,23 @@ void ofxConfig::setLimitsB(int id, float vmin, float vmax) { this->setLimits(id,
 void ofxConfig::setLimitsX(int id, float vmin, float vmax) { this->setLimits(id,0,vmin,vmax); }
 void ofxConfig::setLimitsY(int id, float vmin, float vmax) { this->setLimits(id,1,vmin,vmax); }
 void ofxConfig::setLimitsZ(int id, float vmin, float vmax) { this->setLimits(id,2,vmin,vmax); }
+//
+// Called after any set
+void ofxConfig::post_set(int id, int i)
+{
+	// Set as fresh
+	freshness = true;
+	// Call callback
+	if (bCallback)
+		this->callbackFunc(id, i);
+	// Send OSC
+#ifdef CFG_USE_OFXOSC
+	this->sendOsc(id, i);
+#endif
+}
+//
+// PROG
+//
 // Preserve Prog: prog is priority
 // Prog will be saved and read form file instead of value
 void ofxConfig::preserveProg(int id, bool b)
@@ -296,6 +507,11 @@ void ofxConfig::preserveProg(int id, bool b)
 void ofxConfig::setProg(int id, int i, float p)		// Private
 {
 	params[id]->vec[i].setProg(p);
+	this->post_set(id, i);
+}
+void ofxConfig::setProg(int id, int i, const char *val)		// Private
+{
+	this->setProg(id, i, (float)atof(val));
 }
 void ofxConfig::setProg(int id, float p) { this->setProg(id,0,p); }
 void ofxConfig::setProgR(int id, float p) { this->setProg(id,0,p); }
@@ -304,30 +520,42 @@ void ofxConfig::setProgB(int id, float p) { this->setProg(id,2,p); }
 void ofxConfig::setProgX(int id, float p) { this->setProg(id,0,p); }
 void ofxConfig::setProgY(int id, float p) { this->setProg(id,1,p); }
 void ofxConfig::setProgZ(int id, float p) { this->setProg(id,2,p); }
+void ofxConfig::setProg(int id, float val0, float val1, float val2)
+{
+	this->setProg(id,0,val0);
+	this->setProg(id,1,val1);
+	this->setProg(id,2,val2);
+}
 // generic (float)
-// val1, val2 will be used only on TYPE_VECTOR and TYPE_COLOR
+// val1, val2 will be used only on CFG_TYPE_VECTOR and CFG_TYPE_COLOR
 void ofxConfig::set(int id, int i, float val)		// Private
 {
 	ofxConfigParam *p = params[id];
 	switch (p->type)
 	{
-		case TYPE_FLOAT:
-		case TYPE_DOUBLE:
-		case TYPE_INTEGER:
-		case TYPE_LONG:
-		case TYPE_BOOLEAN:
-		case TYPE_BYTE:
-		case TYPE_COLOR:
-		case TYPE_VECTOR:
+		case CFG_TYPE_FLOAT:
+		case CFG_TYPE_DOUBLE:
+		case CFG_TYPE_INTEGER:
+		case CFG_TYPE_LONG:
+		case CFG_TYPE_BOOLEAN:
+		case CFG_TYPE_BYTE:
+		case CFG_TYPE_COLOR:
+		case CFG_TYPE_VECTOR:
 			p->vec[i].set(val);
 			break;
-		case TYPE_STRING:
-			sprintf(p->string, "%.2f",val);
+		case CFG_TYPE_STRING:
+		{
+			std::ostringstream os;
+			os << val;
+			p->strval = os.str();
 			break;
+		}
 		default:
 			printf("Config.set(int) ERROR invalid id[%d] type[%d] val[%d]\n",id,p->type,(int)val);
+			return;
 			break;
 	};
+	this->post_set(id, i);
 }
 void ofxConfig::set(int id, float val) { this->set(id, 0, val); }
 void ofxConfig::setR(int id, float val) { this->set(id, 0, val); }
@@ -362,16 +590,46 @@ void ofxConfig::set(int id, unsigned char val)
 {
 	this->set(id, (float)val);
 }
-void ofxConfig::set(int id, int i, char *val)		// Private
+// If CFG_TYPE_STRING, just set
+// Else, convert to float
+// pp = Prog?
+void ofxConfig::set(int id, const char *val, bool pp)
 {
-	if (params[id]->type == TYPE_STRING)	// Set string!
-		strcpy(params[id]->string, val);
-	else									// If not string, convert to float
-		this->set(id, i, (float)atof(val));
+	// Set string!
+	if (params[id]->type == CFG_TYPE_STRING)
+		params[id]->strval = val;
+	// Set vector values
+	// val = "number,number,number"
+	else if (this->isVector(id))
+	{
+		char *p1, *p2;
+		char vals[3][16];
+		memset(vals,0,sizeof(vals));
+		// val1
+		if ((p1 = strchr(val,',')) != NULL)
+		{
+			strncpy(vals[0],val,(p1-val));
+			if ((p2 = strchr(p1+1,',')) != NULL)
+			{
+				strncpy(vals[1],p1+1,(p2-p1));
+				strcpy(vals[2],p2+1);
+			}
+		}
+		// set!
+		if (pp)
+			this->setProg(id, atof(vals[0]), atof(vals[1]), atof(vals[2]));
+		else
+			this->set(id, atof(vals[0]), atof(vals[1]), atof(vals[2]));
+	}
+	// defualt: float
+	else if (pp)
+		this->setProg(id, 0, val);
+	else
+		this->set(id, 0, val);
 }
-void ofxConfig::set(int id, char *val)
+void ofxConfig::set(int id, int i, const char *val)		// Private
 {
-	this->set(id, 0, val);
+	this->set(id, i, (float)atof(val));
 }
 void ofxConfig::set(int id, ofColor c)
 {
@@ -383,24 +641,150 @@ void ofxConfig::set(int id, ofPoint p)
 }
 void ofxConfig::set(int id, float val0, float val1, float val2)
 {
-	params[id]->vec[0].set(val0);
-	params[id]->vec[1].set(val1);
-	params[id]->vec[2].set(val2);
+	this->set(id,0,val0);
+	this->set(id,1,val1);
+	this->set(id,2,val2);
 }
+//
+// Vaule labels for radio buttons
+// Works for CFG_TYPE_INTEGER
+// TERMINATE WITH NULL
+// example: this->setValueLabels(THE_SHAPE, "Sphere", "Cube", NULL);
+void ofxConfig::setValueLabels(short id, const char *val0, ...)
+{
+	ofxConfigParam *param = params[id];
+	va_list args;
+	va_start (args, val0);
+	char *p = (char*) val0;
+	do {
+		param->valueLabels.push_back( string(p) );
+	} while ( p = va_arg (args, char *) );
+	va_end (args);
+}
+// accept labels like this...
+//	char labels[][64] = 
+//	{
+//		"640 x 480",
+//		"1024 x 768",
+//		"1280 x 1024",
+//		"1920 x 1080",
+//		NULL
+//	};
+void ofxConfig::setValueLabels(short id, const char labels[][64])
+{
+	for (int n = 0 ; labels[n][0] != '\0' ; n++)
+		params[id]->valueLabels.push_back( string(labels[n]) );
+}
+// Return label value
+const char* ofxConfig::getValueLabel(short id, int ix)
+{
+	ofxConfigParam *param = params[id];
+	if ( ix < param->valueLabels.size())
+		return (char*) param->valueLabels[ix].c_str();
+	else
+		return this->getString(id);
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+//
+// OPERATIONS
+//
+// Invert a value
+void ofxConfig::invert(int id, short i)		// Private
+{
+	params[id]->vec[i].invert();
+	this->post_set(id, i);
+}
+void ofxConfig::invert(int id)
+{
+	if (this->isVector(id))
+	{
+		this->invert(id, 0);
+		this->invert(id, 1);
+		this->invert(id, 2);
+	}
+	else
+		this->invert(id, 0);
+}
+// invert one channel
+void ofxConfig::invertR(int id) { this->invert(id, 0); }
+void ofxConfig::invertG(int id) { this->invert(id, 1); }
+void ofxConfig::invertB(int id) { this->invert(id, 2); }
+void ofxConfig::invertX(int id) { this->invert(id, 0); }
+void ofxConfig::invertY(int id) { this->invert(id, 1); }
+void ofxConfig::invertZ(int id) { this->invert(id, 2); }
+//
+// Subtract a value
+void ofxConfig::sub(int id, int i, float val, bool clamp)	// Private
+{
+	params[id]->vec[i].sub(val, clamp);
+	this->post_set(id, i);
+}
+void ofxConfig::sub(int id, float val, bool clamp)
+{
+	if (this->isVector(id))
+	{
+		this->sub(id, 0, val, clamp);
+		this->sub(id, 1, val, clamp);
+		this->sub(id, 2, val, clamp);
+	}
+	else
+		this->sub(id, 0, val, clamp);
+}
+void ofxConfig::subX(int id, float val, bool clamp) { this->sub(id, 0, val, clamp); }
+void ofxConfig::subY(int id, float val, bool clamp) { this->sub(id, 1, val, clamp); }
+void ofxConfig::subZ(int id, float val, bool clamp) { this->sub(id, 2, val, clamp); }
+void ofxConfig::subR(int id, float val, bool clamp) { this->sub(id, 0, val, clamp); }
+void ofxConfig::subG(int id, float val, bool clamp) { this->sub(id, 1, val, clamp); }
+void ofxConfig::subB(int id, float val, bool clamp) { this->sub(id, 2, val, clamp); }
+// dec = sub(1.0)
+void ofxConfig::dec(int id, bool clamp) { this->sub(id, 0, 1.0f, clamp); }
+void ofxConfig::decX(int id, bool clamp) { this->sub(id, 0, 1.0f, clamp); }
+void ofxConfig::decY(int id, bool clamp) { this->sub(id, 1, 1.0f, clamp); }
+void ofxConfig::decZ(int id, bool clamp) { this->sub(id, 2, 1.0f, clamp); }
+void ofxConfig::decR(int id, bool clamp) { this->sub(id, 0, 1.0f, clamp); }
+void ofxConfig::decG(int id, bool clamp) { this->sub(id, 1, 1.0f, clamp); }
+void ofxConfig::decB(int id, bool clamp) { this->sub(id, 2, 1.0f, clamp); }
+//
+// Add  a value
+void ofxConfig::add(int id, int i, float val, bool clamp)	// Private
+{
+	params[id]->vec[i].add(val, clamp);
+	this->post_set(id, i);
+}
+void ofxConfig::add(int id, float val, bool clamp)
+{
+	if (this->isVector(id))
+	{
+		this->add(id, 0, val, clamp);
+		this->add(id, 1, val, clamp);
+		this->add(id, 2, val, clamp);
+	}
+	else
+		this->add(id, 0, val, clamp);
+}
+void ofxConfig::addX(int id, float val, bool clamp) { this->add(id, 0, val, clamp); }
+void ofxConfig::addY(int id, float val, bool clamp) { this->add(id, 1, val, clamp); }
+void ofxConfig::addZ(int id, float val, bool clamp) { this->add(id, 2, val, clamp); }
+void ofxConfig::addR(int id, float val, bool clamp) { this->add(id, 0, val, clamp); }
+void ofxConfig::addG(int id, float val, bool clamp) { this->add(id, 1, val, clamp); }
+void ofxConfig::addB(int id, float val, bool clamp) { this->add(id, 2, val, clamp); }
+// inc = add(1.0)
+void ofxConfig::inc(int id, bool clamp) { this->add(id, 0, 1.0f, clamp); }
+void ofxConfig::incX(int id, bool clamp) { this->add(id, 0, 1.0f, clamp); }
+void ofxConfig::incY(int id, bool clamp) { this->add(id, 1, 1.0f, clamp); }
+void ofxConfig::incZ(int id, bool clamp) { this->add(id, 2, 1.0f, clamp); }
+void ofxConfig::incR(int id, bool clamp) { this->add(id, 0, 1.0f, clamp); }
+void ofxConfig::incG(int id, bool clamp) { this->add(id, 1, 1.0f, clamp); }
+void ofxConfig::incB(int id, bool clamp) { this->add(id, 2, 1.0f, clamp); }
+
 
 
 /////////////////////////////////////////////////////////////////////////
 //
 // GETTERS
 //
-char* ofxConfig::getName(int id)
-{
-	return params[id]->name;
-}
-short ofxConfig::getType(int id)
-{
-	return params[id]->type;
-}
 // Get minimum value
 float ofxConfig::getMin(int id, int i)		// Private
 {
@@ -437,27 +821,32 @@ float ofxConfig::getProgB(int id) { return this->getProg(id, 2); }
 float ofxConfig::getProgX(int id) { return this->getProg(id, 0); }
 float ofxConfig::getProgY(int id) { return this->getProg(id, 1); }
 float ofxConfig::getProgZ(int id) { return this->getProg(id, 2); }
+ofPoint ofxConfig::getProgVector(int id)
+{
+	return ofPoint(this->getProg(id, 0), this->getProg(id, 1), this->getProg(id, 2));
+}
 // Get generic value (float)
 float ofxConfig::get(int id, int i)		// Private
 {
 	ofxConfigParam *p = params[id];
 	switch (p->type)
 	{
-		case TYPE_FLOAT:
-		case TYPE_DOUBLE:
-		case TYPE_INTEGER:
-		case TYPE_LONG:
-		case TYPE_BOOLEAN:
-		case TYPE_BYTE:
-		case TYPE_COLOR:
-		case TYPE_VECTOR:
+		case CFG_TYPE_FLOAT:
+		case CFG_TYPE_DOUBLE:
+		case CFG_TYPE_INTEGER:
+		case CFG_TYPE_LONG:
+		case CFG_TYPE_BOOLEAN:
+		case CFG_TYPE_BYTE:
+		case CFG_TYPE_COLOR:
+		case CFG_TYPE_VECTOR:
 			return p->vec[i].get();
 			break;
-		case TYPE_STRING:
-			return atof(p->string);
+		case CFG_TYPE_STRING:
+			return atof(p->strval.c_str());
 			break;
 		default:
 			printf("Config.get(int) ERROR invalid id[%d] type[%d]\n",id,p->type);
+			return 0.0f;
 			break;
 	};
 }
@@ -498,338 +887,131 @@ unsigned char ofxConfig::getByte(int id)
 {
 	return (unsigned char) (params[id]->value.get());
 }
-void ofxConfig::getString(int id, char *str)
+void ofxConfig::getString(int id, char *str, bool raw)
 {
-	strcpy(str, this->getString(id,0));
+	strcpy(str, this->getString(id));
 }
-char* ofxConfig::getString(int id)
+const char* ofxConfig::getString(int id, bool raw)
 {
-	return this->getString(id,0);
-}
-char* ofxConfig::getString(int id, int i)		// Private
-{
-	// If not string, copy value to string
-	if (params[id]->type != TYPE_STRING)
-		sprintf(params[id]->string,"%f",this->get(id,i));
-	// Return string
-	return (char*) (params[id]->string);
+	ofxConfigParam *param = params[id];
+	// String type: no conversion
+	if (param->type == CFG_TYPE_STRING)
+		return (param->strval).c_str();
+	// Init string
+	bool pp = param->vec[0].preserveProg;
+	param->strval = (pp ? "P" : "");
+	// Convert to string...
+	for (int i = 0 ; i < (this->isVector(id)?3:1) ; i++)
+	{
+		char val[16];
+		if (i > 0)
+			param->strval += ",";
+		// prog value
+		if (pp)
+			sprintf(val,"%f",this->getProg(id,i));
+		// normal value
+		else
+		{
+			// Format value
+			switch(param->type)
+			{
+				case CFG_TYPE_INTEGER:
+					if (raw)
+						sprintf(val,"%d",(int)this->get(id));
+					else
+					{
+						int v = (int)this->get(id,i) - (int)this->getMin(id,i);
+						if ( v < param->valueLabels.size())
+							return (char*) param->valueLabels[v].c_str();
+						else
+							sprintf(val,"%d",(int)this->get(id));
+					}
+					break;
+				case CFG_TYPE_COLOR:
+					sprintf(val,"%d",(int)this->get(id,i));
+					break;
+				case CFG_TYPE_BYTE:
+					if (raw)
+						sprintf(val,"%d",(int)this->get(id,i));
+					else
+						sprintf(val,"%c",(int)this->get(id,i));
+					break;
+				case CFG_TYPE_LONG:
+					sprintf(val,"%ld",(long)this->get(id,i));
+					break;
+				case CFG_TYPE_BOOLEAN:
+					if (raw)
+						sprintf(val,"%d",(this->get(id,i) == 0.0 ? 0 : 1));
+					else
+						sprintf(val,"%s",(this->get(id,i) == 0.0 ? "OFF" : "ON"));
+					break;
+				default:
+					sprintf(val,"%f",this->get(id,i));
+					break;
+			}
+		}
+		param->strval += val;
+	}
+	// return string
+	return (param->strval).c_str();
 }
 ofColor ofxConfig::getColor(int id)
 {
-	ofxConfigParam *p = params[id];
-	return ofColor(p->vec[0].get(), p->vec[1].get(), p->vec[2].get());
+	return ofColor(this->get(id,0), this->get(id,1),this->get(id,2));
 }
 ofPoint ofxConfig::getVector(int id)
 {
-	ofxConfigParam *p = params[id];
-	return ofPoint(p->vec[0].get(), p->vec[1].get(), p->vec[2].get());
+	return ofPoint(this->get(id,0), this->get(id,1),this->get(id,2));
 }
-
-
-/////////////////////////////////////////////////////////////////////////
-//
-// OPERATIONS
-//
-// Invert a value
-void ofxConfig::invert(int id)
-{
-	if (this->isVector(id))
-	{
-		params[id]->vec[0].invert();
-		params[id]->vec[1].invert();
-		params[id]->vec[2].invert();
-	}
-	else
-		params[id]->value.invert();
-}
-// invert one channel
-void ofxConfig::invertR(int id) { params[id]->vec[0].invert(); }
-void ofxConfig::invertG(int id) { params[id]->vec[1].invert(); }
-void ofxConfig::invertB(int id) { params[id]->vec[2].invert(); }
-void ofxConfig::invertX(int id) { params[id]->vec[0].invert(); }
-void ofxConfig::invertY(int id) { params[id]->vec[1].invert(); }
-void ofxConfig::invertZ(int id) { params[id]->vec[2].invert(); }
-//
-// Decrease a value
-void ofxConfig::dec(int id, float val, bool clamp)
-{
-	if (this->isVector(id))
-	{
-		params[id]->vec[0].dec(val, clamp);
-		params[id]->vec[1].dec(val, clamp);
-		params[id]->vec[2].dec(val, clamp);
-	}
-	else
-		params[id]->vec[0].dec(val, clamp);
-}
-void ofxConfig::decX(int id, float val, bool clamp) { params[id]->vec[0].dec(val, clamp); }
-void ofxConfig::decY(int id, float val, bool clamp) { params[id]->vec[1].dec(val, clamp); }
-void ofxConfig::decZ(int id, float val, bool clamp) { params[id]->vec[2].dec(val, clamp); }
-void ofxConfig::decR(int id, float val, bool clamp) { params[id]->vec[0].dec(val, clamp); }
-void ofxConfig::decG(int id, float val, bool clamp) { params[id]->vec[1].dec(val, clamp); }
-void ofxConfig::decB(int id, float val, bool clamp) { params[id]->vec[2].dec(val, clamp); }
-//
-// Increase  a value
-void ofxConfig::inc(int id, float val, bool clamp)
-{
-	if (this->isVector(id))
-	{
-		params[id]->vec[0].inc(val, clamp);
-		params[id]->vec[1].inc(val, clamp);
-		params[id]->vec[2].inc(val, clamp);
-	}
-	else
-		params[id]->vec[0].inc(val, clamp);
-}
-void ofxConfig::incX(int id, float val, bool clamp) { params[id]->vec[0].inc(val, clamp); }
-void ofxConfig::incY(int id, float val, bool clamp) { params[id]->vec[1].inc(val, clamp); }
-void ofxConfig::incZ(int id, float val, bool clamp) { params[id]->vec[2].inc(val, clamp); }
-void ofxConfig::incR(int id, float val, bool clamp) { params[id]->vec[0].inc(val, clamp); }
-void ofxConfig::incG(int id, float val, bool clamp) { params[id]->vec[1].inc(val, clamp); }
-void ofxConfig::incB(int id, float val, bool clamp) { params[id]->vec[2].inc(val, clamp); }
-
 
 
 
 /////////////////////////////////////////////////////////////////////////
 //
-// MOUSE PICKERS
+// SAVE / READ utils
 //
-// Set a VECTOR as picker
-void ofxConfig::setPicker(int id, bool clamp, float sz, ofColor outColor, ofColor overColor, ofColor pickedColor)
+// Sets default file and load it
+int ofxConfig::useFile(const char *f)
 {
-	ofxConfigParam *p = params[id];
-	if (p->type != TYPE_VECTOR)
-	{
-		printf("Param [%s] is not TYPE_VECTOR become a picker!",p->name);
-		return;
-	}
-	// Save picker info
-	p->pickerClamp = clamp;
-	p->pickerSize = sz;
-	p->pickerColorOut = outColor;
-	p->pickerColorOver = overColor;
-	p->pickerColorPicked = pickedColor;
-	// Put picker to work
-	p->pickerStatus = PICKER_OUT;
+	currentFileName = this->getFullFilename(f);
+	this->load();
 }
 //
-// Test if mouse is over a picker
-bool ofxConfig::isMouseOverPicker(ofxConfigParam *p, float x, float y)
+// Get file name
+string ofxConfig::getFullFilename(const char *f)
 {
-	if (x >= (int)(p->vec[0].get()-(p->pickerSize)) && x <= (int)(p->vec[0].get()+(p->pickerSize)) && 
-		y >= (int)(p->vec[1].get()-(p->pickerSize)) && y <= (int)(p->vec[1].get()+(p->pickerSize)) )
-		return true;
-	else
-		return false;
+	// Use current
+	if (f == NULL)
+		return currentFileName;
+	
+	// Make filename
+	std::ostringstream os;
+	// Cinder file
+#ifdef CINDER
+#ifdef CINDER_COCOA_TOUCH
+	os << getHomeDirectory() << f;
+#else
+	os << getHomeDirectory() << "/Dev/Cinder/config/" << f;
+#endif
+	// openFrameworks File
+#else
+#ifdef FREEFRAME
+	os << "/uvjs/" << f;
+#else
+#ifdef RELEASE
+	os << ofToDataPath(f);			// BUNDLED
+#else
+	os << "../../../data/" << f;
+#endif // release
+#endif // freeframe
+#endif // of
+	return os.str();
 }
-//
-// Mouse events
-void ofxConfig::mouseMoved(ofMouseEventArgs &e)
+// Get current save time
+const char* ofxConfig::getSaveTime()
 {
-	for (int id = 0 ; id < params.size() ; id++ )
-	{
-		ofxConfigParam *p = params[id];
-		if (p == NULL)
-			continue;
-		// Picker is OFF?
-		if (p->pickerStatus == PICKER_OFF)
-			continue;
-		// mouse is over picker?
-		if (isMouseOverPicker(p, e.x, e.y))
-			p->pickerStatus = PICKER_OVER;
-		else
-			p->pickerStatus = PICKER_OUT;
-	}
+	return saveTime.c_str();
 }
-void ofxConfig::mousePressed(ofMouseEventArgs &e)
-{
-	for (int id = 0 ; id < params.size() ; id++ )
-	{
-		ofxConfigParam *p = params[id];
-		if (p == NULL)
-			continue;
-		// Picker is ON?
-		if (isMouseOverPicker(p, e.x, e.y))
-		{
-			p->pickerStatus = PICKER_PICKED;
-			break;	// Pick just ONE!
-		}
-	}
-	// Remember position
-	lastX = e.x;
-	lastY = e.y;
-}
-void ofxConfig::mouseDragged(ofMouseEventArgs &e)
-{
-	int v;
-	float min, max;
-	for (int id = 0 ; id < params.size() ; id++ )
-	{
-		ofxConfigParam *p = params[id];
-		if (p == NULL)
-			continue;
-		// Picker is ON?
-		if (p->pickerStatus == PICKER_PICKED)
-		{
-			// Move X
-			v = e.x-lastX;
-			// ignore movement outside limits
-			min = this->getMinX(id);
-			max = this->getMaxX(id);
-			if (p->pickerClamp && lastX < min)
-				v -= (min-lastX);
-			else if (p->pickerClamp && lastX > max)
-				v += (lastX-max);
-			this->incX(id, v);
-			// Move Y
-			v = e.y-lastY;
-			// ignore movement outside limits
-			min = this->getMinY(id);
-			max = this->getMaxY(id);
-			if (p->pickerClamp && lastY < min)
-				v -= (min-lastY);
-			else if (p->pickerClamp && lastY > max)
-				v += (lastY-max);
-			this->incY(id, v);
-			// Clamp values to limits?
-			if (p->pickerClamp)
-			{
-				p->vec[0].clamp();
-				p->vec[1].clamp();
-			}
-		}
-	}
-	// Remember position
-	lastX = e.x;
-	lastY = e.y;
-}
-void ofxConfig::mouseReleased(ofMouseEventArgs &e)
-{
-	this->mouseMoved(e);
-}
-//
-// Draw pickers!
-void ofxConfig::drawPickers(ofEventArgs &e)
-{
-	for (int id = 0 ; id < params.size() ; id++ )
-	{
-		ofxConfigParam *p = params[id];
-		if (p == NULL)
-			continue;
-		// Picker is ON?
-		if (p->pickerStatus == PICKER_OFF)
-			continue;
-		// Set color
-		if (p->pickerStatus == PICKER_OUT)
-			ofSetColor(p->pickerColorOut);
-		else if (p->pickerStatus == PICKER_OVER)
-			ofSetColor(p->pickerColorOver);
-		else if (p->pickerStatus == PICKER_PICKED)
-			ofSetColor(p->pickerColorPicked);
-		// Draw picker
-		ofNoFill();
-		ofRect(p->vec[0].get()-(p->pickerSize/2.0), p->vec[1].get()-(p->pickerSize/2.0), 
-			   p->pickerSize, p->pickerSize);
-	}
-}
-
-
-
-
-/////////////////////////////////////////////////////////////////////////
-//
-// REC / PLAY config parameters
-//
-// TODO: INCORPORAR VECTORS & COLORS!!!!!!
-//
-// Start to record config params
-void ofxConfig::recStart()
-{
-	if (isRecording == false)
-	{
-		// erase buffer
-		for (int n = 0 ; n < recBuffer.size() ; n++)
-			recBuffer[n].clear();
-		recBuffer.clear();
-		// new buffer
-		isRecording = true;
-		isPlaying = false;
-		recFrame = 0;
-		playFrame = -1;
-	}
-	else
-	{
-		this->recStop();
-		if (VERBOSE_REC)
-			printf("RECORDED [%d] frames\n",recFrame);
-		//this->recPlay();
-	}
-}
-// Stop recording config params
-void ofxConfig::recStop()
-{
-	isRecording = false;
-}
-// Start to play config params
-void ofxConfig::recPlay()
-{
-	// start to play if not rec
-	if (isRecording == true)
-		return;
-	// start to play...
-	isPlaying = true;
-	playFrame = -1;
-}
-// IF RECORDING: Add corrent config params to buffer
-// IF PLAYING: Get next config params from buffer
-void ofxConfig::recAdd()
-{
-	// Save Frame
-	if (isRecording == true)
-	{
-		// debug
-		if (VERBOSE_REC)
-			printf("REC FRAME [%d] rate[%.2f] secs[%.2f]\n",recFrame,ofGetFrameRate(),((recFrame+1)/ofGetFrameRate()));
-		// save params
-		FLOAT_VEC values;
-		for (int n = 0 ; n < params.size() ; n++ )
-		{
-			if (params[n] == NULL)
-				continue;
-			values.push_back(this->get(n));
-		}
-		recBuffer.push_back(values);
-		recFrame++;
-	}
-	// Play Frame
-	else if (isPlaying == true)
-	{
-		// Retrieve params
-		playFrame++;
-		FLOAT_VEC values = recBuffer[playFrame];
-		for (int n = 0 ; n < params.size() ; n++ )
-		{
-			if (params[n] == NULL)
-				continue;
-			this->set(n, values[n]);
-		}
-		// debug
-		if (VERBOSE_REC)
-			printf("PLAY FRAME [%d] rate[%.2f] [%.2f]%%\n",playFrame,ofGetFrameRate(),((playFrame+1)*100.0/(float)recFrame));
-		// end play?
-		if (playFrame >= (recFrame-1))
-			isPlaying = false;
-	}
-}
-int ofxConfig::getPlayFrame()
-{
-	return playFrame;
-}
-
-
-
-
 
 
 
@@ -838,27 +1020,28 @@ int ofxConfig::getPlayFrame()
 //
 // SAVE / READ config to file
 //
-// READ from file on data folder
-// Return read params
-int ofxConfig::readFile(const char *filename)
+// SAVE to file on data folder
+// Return saved params
+int ofxConfig::readFile(const char *f)
 {
 	// Open file
-	char *fullFilename = (char*)ofToDataPath(filename).c_str();
-	FILE *fp = fopen (fullFilename,"r");
+	string fullFilename = this->getFullFilename(f);
+	FILE *fp = fopen (fullFilename.c_str(),"r");
 	if (fp == NULL)
 	{
-		printf("ERROR reading config file [%s]\n",fullFilename);
+		printf("ERROR reading config file [%s] errno [%d/%s]\n",fullFilename.c_str(),errno,strerror(errno));
+		sprintf(errmsg, "READ ERROR! [%s]", fullFilename.c_str());
 		return 0;
 	}
 	
 	// Read file
-	int id, i;
-	bool pp;
-	char *p;
-	char data[64];
-	char key[32];
-	char val[CFG_MAX_STR_LEN];
-	for (int n = 0 ; fgets(data,64,fp) != NULL ; n++)
+	int id;
+	bool pp;						// is prog?
+	char *p;						// aux pointer
+	char data[CFG_MAX_DATA_LEN];	// full line
+	string key;						// param key
+	string val;						// param value
+	for (int n = 0 ; fgets(data, sizeof(data) ,fp) != NULL ; n++)
 	{
 		// Comment?
 		if (data[0] == '#')
@@ -871,21 +1054,13 @@ int ofxConfig::readFile(const char *filename)
 			continue;
 		// get val
 		if ( (pp = (*(p+1)=='P')) == true)
-			strcpy(val, p+2);
+			val = string(p+2);
 		else
-			strcpy(val, p+1);
+			val = string(p+1);
 		// get key
 		*p = '\0';
-		strcpy(key, data);
-		printf ("READ CGF: %s = %s",key,val);
-		// is there an index in the key?
-		if ( (p = strchr(key,'.')) == NULL)
-			i = 0;
-		else
-		{
-			*p = '\0';
-			i = atoi(p+1);
-		}
+		key = data;
+		printf ("READ CGF: %s = %s",key.c_str(),val.c_str());
 		
 		// Read params
 		for (id = 0 ; id < params.size() ; id++ )
@@ -893,47 +1068,47 @@ int ofxConfig::readFile(const char *filename)
 			ofxConfigParam *param = params[id];
 			if (param == NULL)
 				continue;
-			if (!strcmp(key,param->name))
+			if ( key == param->name )
 			{
-				if (pp && param->type != TYPE_STRING)
-					this->setProg(id, i, (float)atof(val));
-				else
-					this->set(id, i, val);
+				this->preserveProg(id, pp);
+				this->set(id, val.c_str(), pp);
 				break;
 			}
 		}
 		// finish output
-		if (id == params.size() && strcmp(key,"SAVE_TIME"))
+		if (id == params.size() && key != "SAVE_TIME")
 			printf ("  !!!!!!! param do not exist!\n");
 		else
 			printf ("\n");
 		
 		// Is saved time?
-		if (!strcmp(key,"SAVE_TIME"))
-			strcpy(saveTime,val);
+		if (key == "SAVE_TIME")
+			saveTime = val;
 	}
 	
 	// Close file
 	fclose (fp);
-	printf("READ config [%s] OK!\n",fullFilename);
+	printf("READ config [%s] OK!\n",fullFilename.c_str());
+	sprintf(errmsg, "READ [%s]", fullFilename.c_str());
+	
+	// return param count
+	return params.size();
 }
 //
 // SAVE to file on data folder
 // Return saved params
-int ofxConfig::saveFile(const char *filename)
+int ofxConfig::saveFile(const char *f)
 {
-	char name[128];
-	char data[128];
-
 	// Open file
-	char *fullFilename = (char*)ofToDataPath(filename).c_str();
-	FILE *fp = fopen (fullFilename,"w");
+	string fullFilename = this->getFullFilename(f);
+	FILE *fp = fopen (fullFilename.c_str(),"w");
 	if (fp == NULL)
 	{
-		printf("ERROR saving config [%s]\n",fullFilename);
+		printf("ERROR saving config [%s] errno [%d/%s]\n",fullFilename.c_str(),errno,strerror(errno));
+		sprintf(errmsg, "SAVE ERROR!!! [%s]", fullFilename.c_str());
 		return 0;
 	}
-	
+
 	// Save comments
 	fputs("#\n",fp);
 	fputs("# ofxConfig file\n",fp);
@@ -942,16 +1117,19 @@ int ofxConfig::saveFile(const char *filename)
 	fputs("#\tPARAM_NAME[.channel]:[P]value\n",fp);
 	fputs("# Examples:\n",fp);
 	fputs("#\tPARAM_VALUE:10.0\t(parameter with value)\n",fp);
-	fputs("#\tPARAM_PROG:P1.0\t\t(parameter with prog, from 0.0(vmin) to 1.0(vmax))\n",fp);
-	fputs("#\tPARAM_VECTOR.0:150.0\t(vector, channel 0 / X)\n",fp);
-	fputs("#\tPARAM_COLOR.0:255.0\t(color, channel 0 / RED)\n",fp);
-	fputs("#\tPARAM_COLOR.0:P0.5\t(color, channel 0 / RED, with prog)\n",fp);
+	fputs("#\tPARAM_PROG:P1.0\t\t(parameter with prog: from 0.0(vmin) to 1.0(vmax))\n",fp);
+	fputs("#\tPARAM_VECTOR:150.0,150.0,0.0\t(vector: x,y,z)\n",fp);
+	fputs("#\tPARAM_VECTOR:P0.5,0.5,0.0\t\t(vector with prog: x,y,z)\n",fp);
+	fputs("#\tPARAM_COLOR:255,255,255\t\t\t(color: r,g,b)\n",fp);
+	fputs("#\tPARAM_COLOR:P0.0,0.5,1.0\t\t(color with prog: r,g,b)\n",fp);
 	fputs("#\n",fp);
+	
 	// generate save time
+	char data[CFG_MAX_DATA_LEN];
 	time_t now;
 	time ( &now );
-	strcpy(saveTime, &(ctime(&now)[4]));
-	sprintf(data,"SAVE_TIME:%s",saveTime);
+	saveTime = string(&(ctime(&now)[4]));
+	sprintf(data,"SAVE_TIME:%s",saveTime.c_str());
 	fputs(data,fp);
 	
 	// Save params
@@ -960,32 +1138,19 @@ int ofxConfig::saveFile(const char *filename)
 		ofxConfigParam *param = params[id];
 		if (param == NULL)
 			continue;
-		for (int i = 0 ; i < (this->isVector(id)?3:1) ; i++)
-		{
-			if (this->isVector(id))
-				sprintf(name, "%s.%d",this->getName(id),i);
-			else
-				strcpy(name, this->getName(id));
-			if (param->vec[i].preserveProg && param->type != TYPE_STRING)
-				sprintf(data,"%s:P%f\n",name,this->getProg(id,i));
-			else
-				sprintf(data,"%s:%s\n",name,this->getString(id,i));
-			fputs  (data,fp);
-		}
+		// make line (name+value)
+		sprintf(data,"%s:%s\n",this->getName(id),this->getString(id, true));
+		// save line
+		fputs  (data,fp);
 	}
 	
 	// Close file
 	fclose (fp);
 	
 	// Ok!
-	printf("SAVE config [%s] OK!\n",fullFilename);
+	printf("SAVE config [%s] OK!\n",fullFilename.c_str());
+	sprintf(errmsg, "SAVED [%s]", fullFilename.c_str());
+	
+	// return param count
+	return params.size();
 }
-// Get param name
-char* ofxConfig::getSaveTime()
-{
-	return saveTime;
-}
-
-
-
-
