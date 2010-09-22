@@ -264,6 +264,34 @@ void  ofImage::setFromPixels(unsigned char * newPixels, int w, int h, int newTyp
 	update();
 }
 
+//------------------------------------
+void  ofImage::fill(ofColor c){
+	if (!myPixels.bAllocated)
+		return;
+	for (int n = 0 ; n < (myPixels.width*myPixels.height) ; n++)
+	{
+		unsigned char *p = &(myPixels.pixels[n*(bpp/8)]);
+		p[0] = c.r;
+		p[1] = c.g;
+		p[2] = c.b;
+	}
+	this->update();
+}
+
+//------------------------------------
+// REMEMBER TO CALL update() after you set all the pixels you want!
+void  ofImage::setPixel(int x, int y, ofColor c){
+	this->setPixel(x, y, c.r, c.g, c.b);
+}
+void  ofImage::setPixel(int x, int y, int r, int g, int b){
+	if (!myPixels.bAllocated)
+		return;
+	unsigned char *p = &(myPixels.pixels[((myPixels.width*y)+x)*(bpp/8)]);
+	p[0] = r;
+	p[1] = g;
+	p[2] = b;
+}
+
 // turn off alpha for this color
 //------------------------------------
 void ofImage::keyOut(int hexColor){
