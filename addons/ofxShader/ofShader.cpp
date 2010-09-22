@@ -93,20 +93,43 @@ void ofShader::loadShader(const char * fragmentName, const char * vertexName){
 }
 		
 //---------------------------------------------------------------
-void ofShader::loadShader(const char * shaderName){
+void ofShader::loadShader(const char * shaderName, bool hasPath){
 	bLoaded = false;
 	char fragmentName[1024];
 	char vertexName[1024];
 	
-	char path[255];
-	strcpy(path, ofToDataPath(shaderName).c_str()); //this adds the right path to the data folder no matter what OS 
-													//you might be using.
-	
-	sprintf(fragmentName,"%s.frag", path);
-	sprintf(vertexName, "%s.vert", path);
+	if (hasPath)
+	{
+		sprintf(fragmentName,"%s.frag", shaderName);
+		sprintf(vertexName, "%s.vert", shaderName);
+	}
+	else
+	{
+		char path[255];
+		strcpy(path, ofToDataPath(shaderName).c_str()); //this adds the right path to the data folder no matter what OS 
+		sprintf(fragmentName,"%s.frag", path);
+		sprintf(vertexName, "%s.vert", path);
+	}
+
+	//printf("ROGER: frag=%s\n",fragmentName);
+	//printf("ROGER vert=%s\n",vertexName);
 	loadShader(fragmentName, vertexName);
 	
 	strcpy(name, shaderName);
+}
+
+//---------------------------------------------------------------
+// ROGER
+void ofShader::loadShaderFV(const char * frag, const char * vert){
+	bLoaded = false;
+	char fragmentName[1024];
+	char vertexName[1024];
+	
+	sprintf(fragmentName,"%s.frag", ofToDataPath(frag).c_str());
+	sprintf(vertexName, "%s.vert", ofToDataPath(vert).c_str());
+	loadShader(fragmentName, vertexName);
+	
+	strcpy(name, frag);
 }
 
 
@@ -153,6 +176,7 @@ void ofShader::apply(){
 		return;
 	}
 	// Draw quad
+	glClearColor(0,0,0,0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_COLOR_MATERIAL);
@@ -177,34 +201,34 @@ void ofShader::apply(ofxFBOTexture *fbo){
 //																	\___________________.
 //______________________________________________________________________________________\__________________.
 */
-void ofShader::setUniform (char * name, float v1) {
+void ofShader::setUniform ( const char * name, float v1) {
 	if(bLoaded ){
 		glUniform1fARB(glGetUniformLocationARB(shader, name), v1);
 	}
 }
 
-void ofShader::setUniform (char * name, float v1, float v2){
+void ofShader::setUniform ( const char * name, float v1, float v2){
 	if (bLoaded ){
 		glUniform2fARB(glGetUniformLocationARB(shader, name), v1, v2);
 	}
 }
 
-void ofShader::setUniform (char * name, float v1, float v2, float v3){
+void ofShader::setUniform ( const char * name, float v1, float v2, float v3){
 	if (bLoaded	){
 		glUniform3fARB(glGetUniformLocationARB(shader, name), v1, v2, v3);
 	}
 }
 
-void ofShader::setUniform (char * name, float v1, float v2, float v3, float v4){
+void ofShader::setUniform ( const char * name, float v1, float v2, float v3, float v4){
 	if (bLoaded ){
 		glUniform4fARB(glGetUniformLocationARB(shader, name), v1, v2, v3, v4);
 	}
 }
 
-// vec2 usage: setUniform ("name", (float*)v, 2);count
+// vec2 usage: setUniform ("name", (float*)v, 2);
 // vec3 usage: setUniform ("name", (float*)v, 3);
 // vec4 usage: setUniform ("name", (float*)v, 4);
-void ofShader::setUniform (char * name, float *v, int count){
+void ofShader::setUniform ( const char * name, float *v, int count){
 	if (count == 2)
 		glUniform2fvARB(glGetUniformLocationARB(shader, name), count, (GLfloat*)v);
 	else if (count == 3)
@@ -222,25 +246,25 @@ void ofShader::setUniform (char * name, float *v, int count){
 //																	\___________________.
 //_______________________________________________________________________________________\__________________.
 */
-void ofShader::setUniform (char * name, int v1){
+void ofShader::setUniform ( const char * name, int v1){
 	if (bLoaded ){
 		glUniform1iARB(glGetUniformLocationARB(shader, name), v1);
 	}
 }
 
-void ofShader::setUniform (char * name, int v1, int v2){
+void ofShader::setUniform ( const char * name, int v1, int v2){
 	if (bLoaded ){
 		glUniform2iARB(glGetUniformLocationARB(shader, name), v1, v2);
 	}
 }
 
-void ofShader::setUniform (char * name, int v1, int v2, int v3){
+void ofShader::setUniform ( const char * name, int v1, int v2, int v3){
 	if (bLoaded ){
 		glUniform3iARB(glGetUniformLocationARB(shader, name), v1, v2, v3);
 	}
 }
 
-void ofShader::setUniform (char * name, int v1, int v2, int v3, int v4){
+void ofShader::setUniform ( const char * name, int v1, int v2, int v3, int v4){
 	if (bLoaded ){
 		glUniform4iARB(glGetUniformLocationARB(shader, name), v1, v2, v3, v4);
 	}
@@ -250,7 +274,7 @@ void ofShader::setUniform (char * name, int v1, int v2, int v3, int v4){
 // ivec3 usage: setUniform ("name", (long*)v, 3);
 // ivec4 usage: setUniform ("name", (long*)v, 4);
 // OBS: GLint is in fact a long
-void ofShader::setUniform (char * name, long *v, int count){
+void ofShader::setUniform ( const char * name, long *v, int count){
 	if (count == 2)
 		glUniform2ivARB(glGetUniformLocationARB(shader, name), count, (GLint*)v);
 	else if (count == 3)
@@ -270,7 +294,7 @@ void ofShader::setUniform (char * name, long *v, int count){
  //_______________________________________________________________________________________\__________________.
  */
 
-void ofShader::setSampler (char * name, int unit, ofTexture *tex)
+void ofShader::setSampler ( const char * name, int unit, ofTexture *tex)
 {
 	glActiveTexture(GL_TEXTURE0+unit);									// move to desired unit
 	glBindTexture(tex->texData.textureTarget, tex->texData.textureID);	// bind to unit
@@ -289,25 +313,25 @@ void ofShader::setSampler (char * name, int unit, ofTexture *tex)
  //																	\___________________.
  //______________________________________________________________________________________\__________________.
  */
-void ofShader::setAttribute (char * name, float v1) {
+void ofShader::setAttribute ( const char * name, float v1) {
 	if(bLoaded ){
 		glVertexAttrib1f(glGetAttribLocation((GLuint)shader, name), v1);
 	}
 }
 
-void ofShader::setAttribute (char * name, float v1, float v2){
+void ofShader::setAttribute ( const char * name, float v1, float v2){
 	if (bLoaded ){
 		glVertexAttrib2f(glGetAttribLocation((GLuint)shader, name), v1, v2);
 	}
 }
 
-void ofShader::setAttribute (char * name, float v1, float v2, float v3){
+void ofShader::setAttribute ( const char * name, float v1, float v2, float v3){
 	if (bLoaded	){
 		glVertexAttrib3f(glGetAttribLocation((GLuint)shader, name), v1, v2, v3);
 	}
 }
 
-void ofShader::setAttribute (char * name, float v1, float v2, float v3, float v4){
+void ofShader::setAttribute ( const char * name, float v1, float v2, float v3, float v4){
 	if (bLoaded ){
 		glVertexAttrib4f(glGetAttribLocation((GLuint)shader, name), v1, v2, v3, v4);
 	}
@@ -320,25 +344,25 @@ void ofShader::setAttribute (char * name, float v1, float v2, float v3, float v4
  //																	\___________________.
  //_______________________________________________________________________________________\__________________.
  */
-void ofShader::setAttribute (char * name, short v1){
+void ofShader::setAttribute ( const char * name, short v1){
 	if (bLoaded ){
 		glVertexAttrib1s(glGetAttribLocation((GLuint)shader, name), v1);
 	}
 }
 
-void ofShader::setAttribute (char * name, short v1, short v2){
+void ofShader::setAttribute ( const char * name, short v1, short v2){
 	if (bLoaded ){
 		glVertexAttrib2s(glGetAttribLocation((GLuint)shader, name), v1, v2);
 	}
 }
 
-void ofShader::setAttribute (char * name, short v1, short v2, short v3){
+void ofShader::setAttribute ( const char * name, short v1, short v2, short v3){
 	if (bLoaded ){
 		glVertexAttrib3s(glGetAttribLocation((GLuint)shader, name), v1, v2, v3);
 	}
 }
 
-void ofShader::setAttribute (char * name, short v1, short v2, short v3, short v4){
+void ofShader::setAttribute ( const char * name, short v1, short v2, short v3, short v4){
 	if (bLoaded ){
 		glVertexAttrib4s(glGetAttribLocation((GLuint)shader, name), v1, v2, v3, v4);
 	}
@@ -351,25 +375,25 @@ void ofShader::setAttribute (char * name, short v1, short v2, short v3, short v4
  //																	\___________________.
  //_______________________________________________________________________________________\__________________.
  */
-void ofShader::setAttribute (char * name, double v1){
+void ofShader::setAttribute ( const char * name, double v1){
 	if (bLoaded ){
 		glVertexAttrib1s(glGetAttribLocation((GLuint)shader, name), v1);
 	}
 }
 
-void ofShader::setAttribute (char * name, double v1, double v2){
+void ofShader::setAttribute ( const char * name, double v1, double v2){
 	if (bLoaded ){
 		glVertexAttrib2s(glGetAttribLocation((GLuint)shader, name), v1, v2);
 	}
 }
 
-void ofShader::setAttribute (char * name, double v1, double v2, double v3){
+void ofShader::setAttribute ( const char * name, double v1, double v2, double v3){
 	if (bLoaded ){
 		glVertexAttrib3s(glGetAttribLocation((GLuint)shader, name), v1, v2, v3);
 	}
 }
 
-void ofShader::setAttribute (char * name, double v1, double v2, double v3, double v4){
+void ofShader::setAttribute ( const char * name, double v1, double v2, double v3, double v4){
 	if (bLoaded ){
 		glVertexAttrib4s(glGetAttribLocation((GLuint)shader, name), v1, v2, v3, v4);
 	}

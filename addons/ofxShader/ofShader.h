@@ -30,7 +30,8 @@ class ofShader{
 	
 	public:
 		
-		void 	loadShader(const char * shaderName);	
+		void 	loadShader(const char * shaderName, bool hasPath=false);		
+		void	loadShaderFV(const char * frag, const char * vert);
 		void 	loadShader(const char * fragmentShaderName, const char * vertexShaderName);	
 		
 		void 	unload();
@@ -42,34 +43,34 @@ class ofShader{
 		///-------------------------------------------------------------------------------
 		//| Setters 
 		
-		void 	setUniform (char * name, float v1);
-		void 	setUniform (char * name, float v1, float v2);
-		void 	setUniform (char * name, float v1, float v2, float v3);
-		void 	setUniform (char * name, float v1, float v2, float v3, float v4);
-		void 	setUniform (char * name, float *v, int count);
+		void 	setUniform ( const char * name, float v1);
+		void 	setUniform ( const char * name, float v1, float v2);
+		void 	setUniform ( const char * name, float v1, float v2, float v3);
+		void 	setUniform ( const char * name, float v1, float v2, float v3, float v4);
+		void 	setUniform ( const char * name, float *v, int count);
 		
-		void 	setUniform (char * name, int v1);
-		void 	setUniform (char * name, int v1, int v2);
-		void 	setUniform (char * name, int v1, int v2, int v3);
-		void 	setUniform (char * name, int v1, int v2, int v3, int v4);
-		void 	setUniform (char * name, long *v, int count);
+		void 	setUniform ( const char * name, int v1);
+		void 	setUniform ( const char * name, int v1, int v2);
+		void 	setUniform ( const char * name, int v1, int v2, int v3);
+		void 	setUniform ( const char * name, int v1, int v2, int v3, int v4);
+		void 	setUniform ( const char * name, long *v, int count);
 	
-		void 	setSampler (char * name, int unit, ofTexture *tex);
+		void 	setSampler ( const char * name, int unit, ofTexture *tex);
 	
-		void	setAttribute( char * name, float v1);
-		void	setAttribute( char * name, float v1, float v2);
-		void	setAttribute( char * name, float v1, float v2, float v3);
-		void	setAttribute( char * name, float v1, float v2, float v3, float v4);
+		void	setAttribute( const char * name, float v1);
+		void	setAttribute( const char * name, float v1, float v2);
+		void	setAttribute( const char * name, float v1, float v2, float v3);
+		void	setAttribute( const char * name, float v1, float v2, float v3, float v4);
 		
-		void	setAttribute( char * name, short v1);
-		void	setAttribute( char * name, short v1, short v2);
-		void	setAttribute( char * name, short v1, short v2, short v3);
-		void	setAttribute( char * name, short v1, short v2, short v3, short v4);
+		void	setAttribute( const char * name, short v1);
+		void	setAttribute( const char * name, short v1, short v2);
+		void	setAttribute( const char * name, short v1, short v2, short v3);
+		void	setAttribute( const char * name, short v1, short v2, short v3, short v4);
 		
-		void	setAttribute( char * name, double v1);
-		void	setAttribute( char * name, double v1, double v2);
-		void	setAttribute( char * name, double v1, double v2, double v3);
-		void	setAttribute( char * name, double v1, double v2, double v3, double v4);
+		void	setAttribute( const char * name, double v1);
+		void	setAttribute( const char * name, double v1, double v2);
+		void	setAttribute( const char * name, double v1, double v2, double v3);
+		void	setAttribute( const char * name, double v1, double v2, double v3, double v4);
 		
 		
 		///-------------------------------------------------------------------------------
