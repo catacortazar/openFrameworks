@@ -31,10 +31,10 @@ void testApp::draw(){
 	franklinBook.drawString("hello, this is franklin book calling\nanyone home?", 100,100);
 	
 	ofSetColor(0x000000);
-	verdana.drawString("hello, I am aliased verdana -- full character set, see: ÔøΩ ! ", 100,210);
+	verdana.drawString("hello, I am aliased verdana -- full character set, see: ÔøΩ ! á ç", 100,210);
 	
 	ofSetColor(0x00FF00);
-	franklinBook.drawString("I can't make an (ÔøΩ) like you", 100,310);
+	franklinBook.drawString("I can't make an (ÔøΩ) like you á ç", 100,310);
 	
 	ofSetColor(0x000000);
 	verdana.drawString("yeah, but I'm not exactly pretty\nthe problem is with freeType library...\napple has a patent on TTF font hints\nso our aliased type via freeType isn't super looking", 100,380);
