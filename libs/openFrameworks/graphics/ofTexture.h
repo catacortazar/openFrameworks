@@ -78,6 +78,8 @@ class ofTexture : public ofBaseDraws{
 	void draw(ofPoint p);
 	void draw(float x, float y);
 	void draw(float x, float y, float z);
+	// ROGER
+	void draw(ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4);
 
 	//for the advanced user who wants to draw textures in their own way
 	void bind();
@@ -100,6 +102,9 @@ class ofTexture : public ofBaseDraws{
 
 	float getHeight();
 	float getWidth();
+	
+	float getTex_t() { return texData.tex_t; };
+	float getTex_u() { return texData.tex_u; };
 
 	ofTextureData texData;
 protected:
