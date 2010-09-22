@@ -8,6 +8,7 @@
 
 // bg color
 float * ofBgColorPtr();
+void ofBackground(ofColor c);
 void ofBackground(int hexColor, float _a=255.0f);
 void ofBackground(int r, int g, int b, int a=255);
 
@@ -80,6 +81,7 @@ void ofSetLineWidth(float lineWidth);
 
 // color options
 void ofSetColor(ofColor color);
+void ofSetColor(ofColor color, int _a);
 void ofSetColor(int r, int g, int b); // 0-255
 void ofSetColor(int r, int g, int b, int a); // 0-255
 void ofSetColor(int hexColor); // hex, like web 0xFF0033;

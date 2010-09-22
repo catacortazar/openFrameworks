@@ -164,10 +164,14 @@ float * ofBgColorPtr(){
 }
 
 //----------------------------------------------------------
+void ofBackground(ofColor c){
+	ofBackground ( c.r, c.g, c.b);
+}
+
+//----------------------------------------------------------
 void ofBackground(int hexColor, float _a){
 	ofBackground ( (hexColor >> 16) & 0xff, (hexColor >> 8) & 0xff, (hexColor >> 0) & 0xff, _a);
 }
-
 
 //----------------------------------------------------------
 void ofBackground(int r, int g, int b, int a){
@@ -525,6 +529,11 @@ void ofBezier(float x0, float y0, float x1, float y1, float x2, float y2, float 
 //----------------------------------------------------------
 void ofSetColor(ofColor color){
 	ofSetColor(color.r,color.g,color.b,color.a);
+}
+
+//----------------------------------------------------------
+void ofSetColor(ofColor color, int _a){
+	ofSetColor(color.r,color.g,color.b,_a);
 }
 
 //----------------------------------------------------------
