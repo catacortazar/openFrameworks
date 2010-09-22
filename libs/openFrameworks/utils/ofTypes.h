@@ -422,7 +422,14 @@ class ofColor{
         b = color.b;
         a = color.a;
     }
-
+	
+	ofColor( const ofColor & color, float _a){
+        r = color.r;
+        g = color.g;
+        b = color.b;
+        a = _a;
+    }
+	
 	ofColor( int hexColor, float _a=255.0f){
 		r = (hexColor >> 16) & 0xff;
 		g = (hexColor >> 8) & 0xff;
@@ -470,6 +477,71 @@ class ofColor{
 		return (((r+g+b)/3.0f)/255.0f);
     }
 	
+	// Return average brightnes (0.0 - 1.0), ignoring alpha
+    ofColor getInverted(){
+		return ofColor(255.0f-r, 255.0f-g, 255.0f-b);
+    }
+	
+	// Return hex color
+	// ROGER: TESTAR ISSO AQUI!!!!
+    int getHex(){
+		return ( ((int)r) << 16 + ((int)g) << 8 + ((int)b) );
+    }
+	
+	
+	// make color from hue / brightness / contrast
+	// from http://support.microsoft.com/kb/29240
+	// this is static so you can go like...
+	//	ofColor c = ofColor::colorFromHue(255);
+#define RGBMAX	255
+#define HLSMAX	255
+	// this magic is actually private
+	static int hueMagic(int n1, int n2, int hue)
+	{
+		/* range check: note values passed add/subtract thirds of range */ 
+		if (hue < 0)
+			hue += HLSMAX;
+		if (hue > HLSMAX)
+			hue -= HLSMAX;
+		/* return r,g, or b value from this tridrant */ 
+		if (hue < (HLSMAX/6))
+			return ( n1 + (((n2-n1)*hue+(HLSMAX/12))/(HLSMAX/6)) );
+		if (hue < (HLSMAX/2))
+			return ( n2 );
+		if (hue < ((HLSMAX*2)/3))
+			return ( n1 + (((n2-n1)*(((HLSMAX*2)/3)-hue)+(HLSMAX/12))/(HLSMAX/6)));
+		else
+			return ( n1 );
+	}
+	// make color from hue / brightness / saturation 0..225
+	static ofColor colorFromHLS(int hue, int lum, int sat){
+		int rr,gg,bb;
+		int magic1, magic2;
+		// achromatic case
+		if (sat == 0)
+			rr  = gg = bb = (lum*RGBMAX)/HLSMAX;
+		// chromatic
+		else
+		{
+			/* set up magic numbers */ 
+			if (lum <= (HLSMAX/2))
+				magic2 = (lum*(HLSMAX + sat) + (HLSMAX/2))/HLSMAX;
+			else
+				magic2 = lum + sat - ((lum*sat) + (HLSMAX/2))/HLSMAX;
+			magic1 = 2*lum-magic2;
+			/* get RGB, change units from HLSMAX to RGBMAX */ 
+			rr = (hueMagic(magic1,magic2,hue+(HLSMAX/3))*RGBMAX + (HLSMAX/2))/HLSMAX;
+			gg = (hueMagic(magic1,magic2,hue)*RGBMAX + (HLSMAX/2)) / HLSMAX;
+			bb = (hueMagic(magic1,magic2,hue-(HLSMAX/3))*RGBMAX + (HLSMAX/2))/HLSMAX;
+		}
+		return ofColor(rr, gg, bb);
+    }
+	// make color from hue only 0..225
+	static ofColor colorFromHue(int hue){
+		return colorFromHLS(hue,128,255);
+	}
+	
+
 	
 	//------ Operators:
 	
