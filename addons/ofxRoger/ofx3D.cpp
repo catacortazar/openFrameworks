@@ -57,6 +57,10 @@ ofPoint( 0.0f,  1.0f,  0.0f),	// front
 
 //
 // Cube / Box
+void ofx3DCube(ofPoint p, float scale)
+{
+	ofx3DBox(p.x, p.y, p.z, scale, scale, scale);
+}
 void ofx3DCube(float v[3], float scale)
 {
 	ofx3DBox(v[0], v[1], v[2], scale, scale, scale);
@@ -65,12 +69,17 @@ void ofx3DCube(float x, float y, float z, float scale)
 {
 	ofx3DBox(x, y, z, scale, scale, scale);
 }
+void ofx3DBox(ofPoint p, float w, float h, float d)
+{
+	ofx3DBox(p.x, p.y, p.z, w, h, d);
+}
 void ofx3DBox(float v[3], float w, float h, float d)
 {
 	ofx3DBox(v[0], v[1], v[2], w, h, d);
 }
 void ofx3DBox(float x, float y, float z, float w, float h, float d)
 {
+	//printf("BOX xyz[%.1f/%.1f/%.1f] whd[%.1f/%.1f/%.1f]\n",x,y,z,w,h,d);
 	// Strip-around
 	if (false)
 	{
@@ -125,14 +134,18 @@ void ofx3DBox(float x, float y, float z, float w, float h, float d)
 //
 // Rect Vertex
 const ofPoint rectVertex[] = {
-ofPoint(0.0f, 0.0f, 0.0f),	// 0
-ofPoint(0.0f, 1.0f, 0.0f),	// 1
-ofPoint(1.0f, 0.0f, 0.0f),	// 2
-ofPoint(1.0f, 1.0f, 0.0f)	// 3
+ofPoint(-0.5f, -0.5f, 0.0f),	// 0
+ofPoint(-0.5f,  0.5f, 0.0f),	// 1
+ofPoint( 0.5f, -0.5f, 0.0f),	// 2
+ofPoint( 0.5f,  0.5f, 0.0f)	// 3
 };
 
 //
 // Rect
+void ofx3DSquare(ofPoint p, float scale)
+{
+	ofx3DRect(p.x, p.y, p.z, scale, scale);
+}
 void ofx3DSquare(float v[3], float scale)
 {
 	ofx3DRect(v[0], v[1], v[2], scale, scale);
@@ -140,6 +153,10 @@ void ofx3DSquare(float v[3], float scale)
 void ofx3DSquare(float x, float y, float z, float scale)
 {
 	ofx3DRect(x, y, z, scale, scale);
+}
+void ofx3DRect(ofPoint p, float w, float h)
+{
+	ofx3DRect(p.x, p.y, p.z, w, h);
 }
 void ofx3DRect(float v[3], float w, float h)
 {

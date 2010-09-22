@@ -57,13 +57,15 @@ public:
 	/// send messages to hostname and port
 	void setup( std::string hostname, int port );
 
+	// ROGER - disponibiliza isso...
+	void shutdown();
+
 	/// send the given message
 	void sendMessage( ofxOscMessage& message );
 	/// send the given bundle
 	void sendBundle( ofxOscBundle& bundle );
 
 private:
-	void shutdown();
 		
 	// helper methods for constructing messages
 	void appendBundle( ofxOscBundle& bundle, osc::OutboundPacketStream& p );

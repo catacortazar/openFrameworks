@@ -7,6 +7,7 @@
  *
  */
 
+#include "ofMain.h"
 #include "ofxRoger.h"
 #include "ofx3DUtils.h"
 
@@ -76,7 +77,7 @@ void draw_box(float offX, float offY, float offZ, float sizeX, float sizeY, floa
 void draw_fps(bool filled)
 {
 	char str[20];
-	sprintf(str, "fps [%.2f]", ofGetFrameRate());
+	sprintf(str, "%.2f", ofGetFrameRate());
 	ofFill();
 	ofSetColor(255,255,255,255);
 	ofDrawBitmapString(str, 1.0, ofGetHeight()-5.0, 0.04);

@@ -7,6 +7,8 @@
  *
  */
 
+#include "ofMain.h"
+
 //////////////////////////////////////////////
 //
 // CUBE
@@ -48,13 +50,17 @@ typedef enum {
 // FUNCTIONS
 //
 
+void ofx3DCube(ofPoint p, float scale=1.0);
 void ofx3DCube(float v[3], float scale=1.0);
 void ofx3DCube(float x, float y, float z, float scale=1.0);
+void ofx3DBox(ofPoint p, float w, float h);
 void ofx3DBox(float v[3], float w, float h, float d);
 void ofx3DBox(float x, float y, float z, float w, float h, float d);
 
-void ofx3DSquare(float v[3], float scale);
+void ofx3DSquare(ofPoint p, float scale=1.0);
+void ofx3DSquare(float v[3], float scale=1.0);
 void ofx3DSquare(float x, float y, float z, float scale);
+void ofx3DRect(ofPoint p, float w, float h);
 void ofx3DRect(float v[3], float w, float h);
 void ofx3DRect(float x, float y, float z, float w, float h);
 

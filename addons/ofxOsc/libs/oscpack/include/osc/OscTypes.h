@@ -242,7 +242,8 @@ struct NilType{
 
 
 
-extern NilType Nil;
+// ROGER
+//extern NilType Nil;
 
 
 

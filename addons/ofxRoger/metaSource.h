@@ -9,43 +9,80 @@
 #pragma once
 
 #include "ofMain.h"
+#include "globals.h"
 
-#define INDEX_META(x,y)			(int)(((y)*metaWidth)+(x))
 #define INDEX_SOURCE(x,y)		(((((int)(y*sizeY))*sourceWidth)+((int)(x*sizeX)))*sourceDepth);
 //#define INDEX_SOURCE(x,y)		(((((int)((y+0.5)*sizeY))*sourceWidth)+((int)((x+0.5)*sizeX)))*sourceDepth);
 
 #define CAMERA_WIDTH			640
 #define CAMERA_HEIGHT			480
 
-
-class metaSource {
+///////////////////////////////////////////////////////
+//
+// A LED
+//
+class Led {
+public:
 	
+	Led() {};
+	//void update();
+	void draw(int shape);
+	
+	ofColor		color;
+	ofPoint		pos;
+	float		size;
+	float		bright;
+	
+protected:
+	
+};
+
+
+///////////////////////////////////////////////////////
+//
+// METASOURCE
+//
+class metaSource {
 public:
 	
 	metaSource();
 	
 	// init
-	void resize(int w, int h);
-	bool open(int src);
+	void resize(int w, int h, int d=1);
 	bool openFile(const char *fileName);
 	bool openCamera(const char *camName);
-	// update
-	bool update();
-	// play
+	// playhead
 	void play();
 	void pause();
 	void playPause();
-	ofColor getColor(int x, int y);
+	// Getters
+	ofColor getColor(int x, int y, int z=0);
+	ofPoint getPos(int x, int y, int z=0);
+	float getSize(int x, int y, int z=0);
+	// update
+	bool update(float ledScale);
+	// draw
+	void draw(int shape);
 	
 	// metaled
-	int					metaWidth;
-	int					metaHeight;
-	float				metaAspectRatio;
-	ofColor				*metaPixels;
+	int					width;
+	int					height;
+	int					depth;
+	float				aspectRatio;
 	// source > meta scale
 	float				sizeX;
 	float				sizeY;
-	
+
+	// Playhead
+	bool				bIsPaused;
+	bool				bNewFrame;
+
+protected:
+
+	// playhead
+	void newSource();
+	bool getFrame();
+
 	// sources
 	ofImage				sourceImage;
 	ofVideoPlayer 		sourceVideo;
@@ -58,15 +95,10 @@ public:
 	bool				bLoaded;
 	unsigned char		*sourcePixels;
 	
-	// Playhead
-	bool				bIsPaused;
-	bool				bNewFrame;
-	int					currentFrame;			// first = 1, ...
+	// Current frame
+	Led					leds[GRID_X_MAX][GRID_Y_MAX][GRID_Z_MAX];
 
-protected:
 
-	void newSource();
-	
 };
 
 

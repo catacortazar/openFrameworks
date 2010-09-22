@@ -58,6 +58,10 @@ public:
 	/// listen_port is the port to listen for messages on
 	void setup( int listen_port );
 
+	// ROGER - disponibiliza isso...
+	// shutdown the listener
+	void shutdown();
+
 	/// returns true if there are any messages waiting for collection
 	bool hasWaitingMessages();
 	/// take the next message on the queue of received messages, copy its details into message, and
@@ -70,8 +74,6 @@ protected:
 	virtual void ProcessMessage( const osc::ReceivedMessage &m, const IpEndpointName& remoteEndpoint );
 
 private:
-	// shutdown the listener
-	void shutdown();
 
 	// start the listening thread
 #ifdef TARGET_WIN32
