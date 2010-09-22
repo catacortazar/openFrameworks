@@ -83,7 +83,7 @@ void ofxMidiOut::sendControlChange(int channel, int id, int value){
     message.push_back( value );
     sendMessage();
 }
-// ROGER
+// ROGER - EXPERIMENTAL
 // --------------------------------------------------------------------------------------
 void ofxMidiOut::stimulate(int channel, int id){
     message.clear();

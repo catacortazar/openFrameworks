@@ -41,20 +41,22 @@ int ofxMidiIn::findMyDevicePort(){
 	// Default port: First
 	else
 	{
-		printf( "ofxMidiIn: No devices found! Let's use the first...\n");
+		if(bVerbose)
+			printf( "ofxMidiIn: No devices found! Let's use the first...\n");
 		this->listPorts();
 		return 0;
 	}
 }
 // Find a port with "name" in the name
-int ofxMidiIn::findPortByName(char *name){
+int ofxMidiIn::findPortByName(const char *name){
 	for(unsigned int i=0; i<nPorts; i++){
 		if (strstr(midii.getPortName(i).c_str(),name) != NULL){
 			printf( "ofxMidiIn: Best device : [%s] port %d\n",midii.getPortName(i).c_str(),i);
 			return i;
 		}
 	}
-	printf( "ofxMidiIn: Device [%s] not found...\n",name);
+	if(bVerbose)
+		printf( "ofxMidiIn: Device [%s] not found...\n",name);
 	return -1;
 }
 // --------------------------------------------------------------------------------------

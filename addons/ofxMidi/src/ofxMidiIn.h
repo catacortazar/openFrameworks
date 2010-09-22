@@ -25,7 +25,7 @@ public:
 
 	// ROGER
 	int findMyDevicePort();
-	int findPortByName(char *name);
+	int findPortByName(const char *name);
 
 	void listPorts();
 	void openPort(unsigned int port=0);
