@@ -103,6 +103,7 @@ class ofxCvColorImage : public ofxCvImage {
     virtual void  scaleIntoMe( ofxCvImage& mom, int interpolationMethod = CV_INTER_NN);
     virtual void  convertRgbToHsv();
     virtual void  convertHsvToRgb();
+    virtual void  extractColor(ofColor c, int tolerance);
     // virtual void  mirror( bool bFlipVertically, bool bFlipHorizontally );   //in base class
     // virtual void  translate( float x, float y );                            //in base class
     // virtual void  rotate( float angle, float centerX, float centerY );      //in base class

@@ -407,3 +407,24 @@ void ofxCvColorImage::convertHsvToRgb(){
     flagImageChanged();
 }
 
+//--------------------------------------------------------------------------------
+void ofxCvColorImage::extractColor(ofColor c, int tolerance){
+	// get pixels
+	unsigned char *pix = (unsigned char *)cvImage->imageData;
+	// find color
+	for( int y = 0; y < height ; y++ )
+	{
+		for( int x = 0; x < width ; x++ )
+		{
+			int ix = (y*cvImage->widthStep) + (x * 3);
+			int diff = 0;
+			diff += abs((int)pix[ix+0] - (int)c.r);
+			diff += abs((int)pix[ix+1] - (int)c.g);
+			diff += abs((int)pix[ix+2] - (int)c.b);
+			if (diff > tolerance)
+				pix[ix+0] = pix[ix+1] = pix[ix+2] = 0;
+		}
+	}
+	//flagImageChanged();
+}
+
