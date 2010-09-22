@@ -28,7 +28,9 @@ void testApp::setup(){
     glEnable (GL_COLOR_MATERIAL);
 
     //load the squirrel model - the 3ds and the texture file need to be in the same folder
-    squirrelModel.loadModel("squirrel/NewSquirrel.3ds", 20);
+    //squirrelModel.loadModel("squirrel/NewSquirrel.3ds", 20);
+    squirrelModel.loadModel("DEAKTER2.3ds", 20);
+	
 
     //you can create as many rotations as you want
     //choose which axis you want it to effect
@@ -42,7 +44,7 @@ void testApp::setup(){
 
 //--------------------------------------------------------------
 void testApp::update(){
-    squirrelModel.setRotation(1, 270 + ofGetElapsedTimef() * 60, 0, 0, 1);
+    //squirrelModel.setRotation(1, 270 + ofGetElapsedTimef() * 60, 0, 0, 1);
 
 }
 
@@ -72,10 +74,13 @@ void testApp::draw(){
 
         //draw in middle of the screen
         glTranslatef(ofGetWidth()/2,ofGetHeight()/2,0);
+	// ROGER
+	glScalef(0.01, 0.01, 0.01);
         //tumble according to mouse
         glRotatef(-mouseY,1,0,0);
         glRotatef(mouseX,0,1,0);
         glTranslatef(-ofGetWidth()/2,-ofGetHeight()/2,0);
+	
 
         ofSetColor(255, 255, 255, 255);
         squirrelModel.draw();
