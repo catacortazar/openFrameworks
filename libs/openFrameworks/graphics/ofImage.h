@@ -71,6 +71,9 @@ class ofImage : public ofBaseImage{
 
 		// alter the image
 		void 				setFromPixels(unsigned char * pixels, int w, int h, int newType, bool bOrderIsRGB = true);
+		void 				fill(ofColor c);
+		void				setPixel(int x, int y, ofColor c);
+		void				setPixel(int x, int y, int r, int g, int b);
 		void 				setImageType(int type);
 		void 				resize(int newWidth, int newHeight);
 		void 				grabScreen(int x, int y, int w, int h);		// grab pixels from opengl, using glreadpixels
