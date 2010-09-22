@@ -11,6 +11,7 @@ class ofx3DModelLoader{
 
     void loadModel(string modelName, float scale = 1.0);
     void setPosition(float x, float y, float z);
+    void setScale(float s);
     void setScale(float x, float y, float z);
     void setRotation(int which, float angle, float rot_x, float rot_y, float r_z);
     void draw();
@@ -21,6 +22,9 @@ class ofx3DModelLoader{
     ofPoint pos;
 
     int numRotations;
-    ofx3DBaseLoader * model;
+	
+	// ROGER
+    //ofx3DBaseLoader * model;
+	model3DS * model;
 
 };

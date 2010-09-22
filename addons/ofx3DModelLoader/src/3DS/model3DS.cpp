@@ -5,6 +5,7 @@
 */
 
 #include "model3DS.h"
+#include "ofx3DUtils.h"
 
 model3DS::model3DS(){
 	hasTexture = false;
@@ -79,23 +80,31 @@ void model3DS::loadModel(const char* filename, float scale){
 	end = modelFile->tellg();
 	modelFile->seekg (0, ios::beg);
 
-
 	while(!modelFile->eof() &&  (end != modelFile->tellg())){
-		readChunk(modelFile, modelFile->tellg(), chunkLength);
+		readChunk(modelFile, modelFile->tellg(), chunkLength, 0);
 	}
 
 	m_centerX = (m_boundingBox.minX + m_boundingBox.maxX) / 2.f;
 	m_centerY = (m_boundingBox.minY + m_boundingBox.maxY) / 2.f;
 	m_centerZ = (m_boundingBox.minZ + m_boundingBox.maxZ) / 2.f;
+	m_boundingBox.width = (m_boundingBox.maxX - m_boundingBox.minX);
+	m_boundingBox.height = (m_boundingBox.maxY - m_boundingBox.minY);
+	m_boundingBox.depth = (m_boundingBox.maxZ - m_boundingBox.minZ);
 
 	// Model loaded, clean up
 	modelFile->close();
 	delete modelFile;
-    std::cout<<"[3DS] Model '"<<filename<<"' loaded"<<std::endl;
+    std::cout<<""<<std::endl;
+    std::cout<<"[3DS] Model  ["<<filename<<"] loaded!!!"<<std::endl;
+    std::cout<<"[3DS] Chunks ["<<m_meshes.size()<<"]"<<std::endl;
+    std::cout<<"[3DS] Box min["<<m_boundingBox.minX<<"/"<<m_boundingBox.minY<<"/"<<m_boundingBox.minZ<<"]"<<std::endl;
+    std::cout<<"[3DS] Box max["<<m_boundingBox.maxX<<"/"<<m_boundingBox.maxY<<"/"<<m_boundingBox.maxZ<<"]"<<std::endl;
+    std::cout<<"[3DS] Center ["<<m_centerX<<"/"<<m_centerY<<"/"<<m_centerZ<<"]"<<std::endl;
+    std::cout<<"[3DS] width  ["<<m_boundingBox.width<<"] height["<<m_boundingBox.height<<"] depth["<<m_boundingBox.depth<<"]"<<std::endl;
 }
 
-void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const int objectLength){
-	//std::cout<<std::hex<<"readChunk("<<objectStart<<"-"<<(objectStart+objectLength)<<")"<<std::dec<<std::endl;
+void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const int objectLength, int chunkDepth){
+	//std::cout<<std::hex<<"readChunk depth["<<chunkDepth<<"] ("<<objectStart<<"-"<<(objectStart+objectLength)<<")"<<std::dec<<std::endl;
 
 	ushort chunkHeader;
 	unsigned int chunkLength;
@@ -133,7 +142,7 @@ void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const 
 
 				m_currentMesh = new mesh3DS(this);
 				m_currentMesh->setDrawMode(m_drawMode);
-
+				
 				// Read object name
 				do{
 					modelFile->read(&currentLetter,1);
@@ -144,7 +153,7 @@ void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const 
 				name.erase();
 
 				// Read object sub-chunks
-				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
 
 				if(m_currentMesh->getNumFaces() != 0){
 					m_currentMesh->buildMesh();
@@ -203,7 +212,7 @@ void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const 
                 }
 
 				// Read face sub-chunks
-				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
                 break;
 
 			case CHUNK_SMOOTHING_GROUP:
@@ -242,7 +251,7 @@ void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const 
 				m_currentMaterial = new material3DS();
 
 				// Read material sub-chunks
-                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
 
 				m_materials[m_currentMaterial->getName()] = *m_currentMaterial;
 				delete m_currentMaterial;
@@ -262,7 +271,7 @@ void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const 
 			case CHUNK_TEXTURE_MAP:
 			case CHUNK_BUMP_MAP:
 				//Read texture name and add to current material
-				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
 				m_currentMaterial->loadTexture(m_filepath + m_tempString, chunkHeader);
 				hasTexture = true;
 
@@ -283,40 +292,40 @@ void model3DS::readChunk(std::ifstream *modelFile, const int objectStart, const 
 
 			case CHUNK_DIFFUSE_COLOR:
 				// Read color sub-chunks
-                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
 				m_currentMaterial->setDiffuseColor(m_currentColor);
 
 				break;
 
 			case CHUNK_AMBIENT_COLOR:
 				// Read color sub-chunks
-                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
 				m_currentMaterial->setAmbientColor(m_currentColor);
 
 				break;
 
 			case CHUNK_SPECULAR_COLOR:
 				// Read color sub-chunks
-                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+                readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
 				m_currentMaterial->setSpecularColor(m_currentColor);
 
 				break;
 
 			case CHUNK_SPECULAR_EXPONENT:
 				// Read percent sub-chunk
-				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
                 m_currentMaterial->setSpecularExponent(m_tempFloat);
 				break;
 
 			case CHUNK_SHININESS:
 				// Read percent sub-chunk
-				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
                 m_currentMaterial->setShininess(m_tempFloat);
 				break;
 
 			case CHUNK_TRANSPARENCY:
 				// Read percent sub-chunk
-				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset));
+				readChunk(modelFile, modelFile->tellg(), chunkLength - (long(modelFile->tellg()) - offset), chunkDepth+1);
                 m_currentMaterial->setOpacity(1.0f - m_tempFloat);
 				break;
 
@@ -493,7 +502,7 @@ void mesh3DS::draw(){
 	std::map<std::string, std::vector<ushort> >::iterator materialsIter;
 	for(materialsIter=m_materialFaces.begin(); materialsIter!=m_materialFaces.end(); ++materialsIter){
 		const material3DS& currentMaterial = m_parentModel->getMaterial(materialsIter->first);
-
+ 
 		// Bind texture map (if any)
 		bool hasTextureMap = currentMaterial.hasTextureMap();
 		if(hasTextureMap) glBindTexture(GL_TEXTURE_2D, currentMaterial.getTextureMapId());
@@ -513,9 +522,12 @@ void mesh3DS::draw(){
 			materialFaces = GL_FRONT;
 		}
 
-		// Apply material colors
+		
+		/* USE MY MATERIAL
+
+		 // Apply material colors
 		if(glIsEnabled(GL_LIGHTING)){
-			//const GLfloat matZero[4]={0,0,0,0};
+			 //const GLfloat matZero[4]={0,0,0,0};
 			const GLfloat matOne[4]={1,1,1,1};
 			if(hasTextureMap){ //replace color with texture, but keep lighting contribution
 				glMaterialfv(materialFaces, GL_DIFFUSE, matOne);
@@ -524,16 +536,41 @@ void mesh3DS::draw(){
 			glMaterialfv(materialFaces, GL_AMBIENT, currentMaterial.getAmbientColor());
 			glMaterialfv(materialFaces, GL_SPECULAR, adjustedSpecular);
 			glMaterialf(materialFaces, GL_SHININESS, 128.f * currentMaterial.getSpecularExponent());
+			// ROGER - PITCH BLACK
+			//float pitch[] = {0.0, 0.0, 0.0};
+			//glMaterialfv(materialFaces, GL_AMBIENT, pitch);
+			// ROGER : RANDOM COLOR
+			//glMaterialfv(materialFaces, GL_DIFFUSE, &color.r);
 		}
 		else glColor3fv(currentMaterial.getDiffuseColor());
+
+		 */
+
+		// ROGER : RANDOM COLOR
+		if (m_parentModel->randomColor)
+		{
+			color.r = ofRandom(0.0, 1.0);
+			color.g = ofRandom(0.0, 1.0);
+			color.b = ofRandom(0.0, 1.0);
+			glColor3fv(&color.r);
+		}
 
 		const std::vector<ushort> *currentMatFaces = &(materialsIter->second);
 		numFaces = (int)currentMatFaces->size(); //number of faces in this material
 
+		// ROGER
+		GLenum prim;
+		if (ofGetFill() == OF_OUTLINE)	// ofNoFill();
+			prim = GL_LINE_LOOP;
+		else
+			prim = GL_TRIANGLES;
+
 		switch(m_drawMode){
 			case DRAW_IMMEDIATE_MODE:
 
-				glBegin(GL_TRIANGLES);
+				// ROGER
+				glBegin(prim);
+				
 				for(face=0; face<numFaces; face+=3){
 					if(hasTextureMap){
 						texcoordIndex = (*currentMatFaces)[face]*2;
@@ -575,7 +612,7 @@ void mesh3DS::draw(){
 
 				glVertexPointer( 3, GL_FLOAT, 0, &m_vertices[0] );
 				glNormalPointer(GL_FLOAT, 0, &m_normals[0] );
-				glDrawElements(GL_TRIANGLES, numFaces, GL_UNSIGNED_SHORT, &(materialsIter->second[0]));
+				glDrawElements(prim, numFaces, GL_UNSIGNED_SHORT, &(materialsIter->second[0]));
 
 				glDisableClientState( GL_VERTEX_ARRAY );
 				glDisableClientState( GL_NORMAL_ARRAY );
@@ -609,6 +646,20 @@ void model3DS::draw(){
 		for(meshIter = m_meshes.begin(); meshIter != m_meshes.end(); meshIter++){
 			meshIter->draw();
 		}
+	glPopMatrix();
+}
+
+void model3DS::drawBoundingBox(){
+	glPushMatrix();
+	glTranslatef(-m_centerX,-m_centerY,-m_centerZ);
+	// draw quad
+	glLineWidth(10);
+	ofSetColor(255,255,0,255);
+	ofxLine(m_boundingBox.minX, m_boundingBox.minY, m_centerZ, m_boundingBox.maxX, m_boundingBox.minY, m_centerZ);
+	ofxLine(m_boundingBox.maxX, m_boundingBox.minY, m_centerZ, m_boundingBox.maxX, m_boundingBox.maxY, m_centerZ);
+	ofxLine(m_boundingBox.maxX, m_boundingBox.maxY, m_centerZ, m_boundingBox.minX, m_boundingBox.maxY, m_centerZ);
+	ofxLine(m_boundingBox.minX, m_boundingBox.maxY, m_centerZ, m_boundingBox.minX, m_boundingBox.minY, m_centerZ);
+	// pop!
 	glPopMatrix();
 }
 
