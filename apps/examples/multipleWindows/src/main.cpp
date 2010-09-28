@@ -12,7 +12,7 @@ int main( ){
 	//ofHideWindowBorders();	// not working yet for main window!
 
 	// Additional windows
-	ofSetupWindow(new windowApp( 0 ), 200,768, OF_WINDOW);
+	ofSetupWindow(new windowApp( 0 ), 200,600, OF_WINDOW);
 	ofSetWindowPosition(400,0);
 	//ofHideWindowBorders();
 	

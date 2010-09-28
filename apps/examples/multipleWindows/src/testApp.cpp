@@ -38,6 +38,9 @@ void testApp::draw(){
 	sprintf(str,"pos    [%d/%d]",ofGetWindowPositionX(),ofGetWindowPositionY());
 	ofDrawBitmapString(str, x, y);
 	y+=15;
+	sprintf(str,"mouse  [%d/%d]",mouseX,mouseY);
+	ofDrawBitmapString(str, x, y);
+	y+=15;
 }
 
 //--------------------------------------------------------------

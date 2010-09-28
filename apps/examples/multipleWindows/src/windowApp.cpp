@@ -23,7 +23,7 @@ void windowApp::draw(){
 
 	ofSetColor(255,255,255);
 	int x = 10;
-	int y = 10;
+	int y = 20;
 	char str[64];
 	sprintf(str,"screen [%d/%d]",ofGetScreenWidth(),ofGetScreenHeight());
 	ofDrawBitmapString(str, x, y);
@@ -32,6 +32,9 @@ void windowApp::draw(){
 	ofDrawBitmapString(str, x, y);
 	y+=15;
 	sprintf(str,"pos    [%d/%d]",ofGetWindowPositionX(),ofGetWindowPositionY());
+	ofDrawBitmapString(str, x, y);
+	y+=15;
+	sprintf(str,"mouse  [%d/%d]",mouseX,mouseY);
 	ofDrawBitmapString(str, x, y);
 	y+=15;
 }
