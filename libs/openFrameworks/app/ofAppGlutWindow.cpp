@@ -4,7 +4,7 @@
 #include "ofAppRunner.h"
 
 // Hide window borders hack
-#define USE_HACKED_GLUT
+//#define USE_HACKED_GLUT
 
 
 #ifdef TARGET_WIN32
