@@ -546,7 +546,7 @@ class ofColor{
 	//------ Operators:
 	
 	//Set
-	ofColor & operator=( const ofColor& color ){
+	ofColor & operator=( const ofColor & color ){
 		r = color.r;
 		g = color.g;
 		b = color.b;
@@ -564,18 +564,18 @@ class ofColor{
 	}
 	
     //equality
-    bool operator==( const ofColor& color ) {
+    bool operator==( const ofColor & color ) {
         return (r == color.r) && (g == color.g) && (b == color.b);
     }
 	
 	//inequality
-    bool operator!=( const ofColor& color ) {
+    bool operator!=( const ofColor & color ) {
         return (r != color.r) || (g != color.g) || (b != color.b);
     }
 	
 	// Add
 	// always clamp after to keep channels between 0.0 and 255.0
-    ofColor operator+( const ofColor& color ) const {
+    ofColor operator+( const ofColor & color ) const {
         return ofColor( r+color.r, g+color.g, b+color.b ).clamp();
     }
 	
@@ -583,7 +583,7 @@ class ofColor{
         return ofColor( r+val, g+val, b+val ).clamp();
     }
 	
-	ofColor & operator+=( const ofColor& color ) {
+	ofColor & operator+=( const ofColor & color ) {
         r += color.r;
         g += color.g;
         b += color.b;
@@ -601,7 +601,7 @@ class ofColor{
 	
 	// Subtract
 	// always clamp after to keep channels between 0.0 and 255.0
-    ofColor operator-(const ofColor& color) const {
+    ofColor operator-(const ofColor & color) const {
         return ofColor( r-color.r, g-color.g, b-color.b ).clamp();
     }
 	
@@ -609,7 +609,7 @@ class ofColor{
         return ofColor( r-val, g-val, b-val).clamp();
     }
 	
-    ofColor & operator-=( const ofColor& color ) {
+    ofColor & operator-=( const ofColor & color ) {
         r -= color.r;
         g -= color.g;
         b -= color.b;
@@ -636,7 +636,7 @@ class ofColor{
 	// multiplying a color by 2.0 makes no sense (there is no 200%), so we clamp the value to 1.0 (100%)
 	// the same apply to each channel, so we must think about each channel separately
 	// multiply RED by GREEN will give us black, because the red channel of GREEN will cancel RED, and the green channel of RED will cancel GREEN
-    ofColor operator*( const ofColor& color ) const {
+    ofColor operator*( const ofColor & color ) const {
         return ofColor( r*(color.r/255.0f), g*(color.g/255.0f), b*(color.b/255.0f) );
     }
 	
@@ -646,7 +646,7 @@ class ofColor{
         return ofColor( r*v, g*v, b*v).clamp();
     }
 	
-    ofColor & operator*=( const ofColor& color ) {
+    ofColor & operator*=( const ofColor & color ) {
         r *= (color.r/255.0f);
         g *= (color.g/255.0f);
         b *= (color.b/255.0f);
@@ -666,7 +666,7 @@ class ofColor{
 	// Dividing anything by WHITE will return the original color
 	// Dividing anything by BLACK is impossible (division by zero = core dump!), so will return the original color
 	// The same apply for each channel
-    ofColor operator/( const ofColor& color ) const {
+    ofColor operator/( const ofColor & color ) const {
         return ofColor( color.r!=0.0f ? r/(color.r/255.0f) : r , color.g!=0.0f ? g/(color.g/255.0f) : g, color.b!=0.0f ? b/(color.b/255.0f) : b );
     }
 	
@@ -678,7 +678,7 @@ class ofColor{
 			return *this;
     }
 	
-    ofColor& operator/=( const ofColor& color ) {
+    ofColor& operator/=( const ofColor & color ) {
         if (color.r!=0.0f) r /= (color.r/255.0f);
         if (color.g!=0.0f) g /= (color.g/255.0f);
         if (color.b!=0.0f) b /= (color.b/255.0f);

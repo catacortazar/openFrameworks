@@ -6,7 +6,6 @@
  *  Copyright 2010 Studio Avante. All rights reserved.
  *
  */
-
 #pragma once
 
 #include "ofxConfigGUI.h"

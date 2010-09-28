@@ -47,8 +47,8 @@ typedef cinder::Color8u ofColor;
 #endif
 
 //
-// Config FREEFRAME
-#ifdef FREEFRAME
+// Config FREEFRAME / SURFACE
+#ifdef SURFACE
 #undef CFG_USE_OFXMIDI
 #undef CFG_CATCH_LOOP_EVENTS
 #endif

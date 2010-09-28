@@ -16,7 +16,7 @@ class ofxMacam {
 public:
 	
 	ofxMacam();
-	~ofxMacam();
+	~ofxMacam(); 
 
 	void drawColor(ofColor c, bool force=false);
 	void drawScreen(bool force=false);

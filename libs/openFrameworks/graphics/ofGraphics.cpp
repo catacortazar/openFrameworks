@@ -164,7 +164,7 @@ float * ofBgColorPtr(){
 }
 
 //----------------------------------------------------------
-void ofBackground(ofColor c){
+void ofBackground(const ofColor & c){
 	ofBackground ( c.r, c.g, c.b);
 }
 
@@ -265,7 +265,7 @@ void ofSetCircleResolution(int res){
 
 
 //----------------------------------------------------------
-void ofTriangle(ofPoint p1, ofPoint p2, ofPoint p3){
+void ofTriangle(const ofPoint & p1, const ofPoint & p2, const ofPoint & p3){
 	ofTriangle(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
 }
 
@@ -300,7 +300,7 @@ void ofTriangle(float x1,float y1,float z1,float x2,float y2,float z2,float x3, 
 }
 
 //----------------------------------------------------------
-void ofCircle(ofPoint p, float radius){
+void ofCircle(const ofPoint & p, float radius){
 	ofCircle(p.x, p.y, p.z, radius);
 }
 
@@ -333,7 +333,7 @@ void ofCircle(float x, float y, float z, float radius){
 }
 
 //----------------------------------------------------------
-void ofEllipse(ofPoint p, float width, float height){
+void ofEllipse(const ofPoint & p, float width, float height){
 	ofEllipse(p.x, p.y, p.z, width, height);
 }
 
@@ -365,7 +365,7 @@ void ofEllipse(float x, float y, float z, float width, float height){
 }
 
 //----------------------------------------------------------
-void ofLine(ofPoint p1, ofPoint p2){
+void ofLine(const ofPoint & p1, const ofPoint & p2){
 	ofLine(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
 }
 
@@ -397,12 +397,12 @@ void ofLine(float x1,float y1,float z1,float x2,float y2,float z2){
 }
 
 //----------------------------------------------------------
-void ofRect(ofRectangle r){
+void ofRect(const ofRectangle & r){
 	ofRect(r.x, r.y, 0.0f, r.width, r.height);
 }
 
 //----------------------------------------------------------
-void ofRect(ofPoint p,float w,float h){
+void ofRect(const ofPoint & p,float w,float h){
 	ofRect(p.x, p.y, p.z, w, h);
 }
 
@@ -527,12 +527,12 @@ void ofBezier(float x0, float y0, float x1, float y1, float x2, float y2, float 
 }
 
 //----------------------------------------------------------
-void ofSetColor(ofColor color){
+void ofSetColor(const ofColor & color){
 	ofSetColor(color.r,color.g,color.b,color.a);
 }
 
 //----------------------------------------------------------
-void ofSetColor(ofColor color, int _a){
+void ofSetColor(const ofColor & color, int _a){
 	ofSetColor(color.r,color.g,color.b,_a);
 }
 
@@ -679,7 +679,7 @@ void ofPopMatrix(){
 }
 
 //----------------------------------------------------------
-void ofTranslate(ofPoint p){
+void ofTranslate(const ofPoint & p){
 	glTranslatef(p.x, p.y, p.z);
 }
 
@@ -721,7 +721,7 @@ void ofRotate(float degrees){
 
 
 //--------------------------------------------------
-void ofDrawBitmapString(string textString, ofPoint p){
+void ofDrawBitmapString(string textString, const ofPoint & p){
 	ofDrawBitmapString(textString, p.x, p.y, p.z);
 }
 //--------------------------------------------------
