@@ -14,7 +14,7 @@ void 		ofRunApp(ofBaseApp * OFSA = NULL);
 ofBaseApp * ofGetAppPtr();
 
 //-------------------------- GLUT Hack
-void ofHideWindowBorders();
+void		ofHideWindowBorders();
 
 
 //-------------------------- time

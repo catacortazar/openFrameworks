@@ -2,7 +2,7 @@
  *  ofMultiWindow.cpp
  *  openFrameworksLib
  *
- *  Created by Roger on 27/09/10.
+ *  Created by Roger Sodre on 27/09/10.
  *
  */
 
@@ -23,14 +23,23 @@ void null_cb_int2(int a, int b) {}
 void null_cb_int4(int a, int b, int c, int d) {}
 
 //------------------------------------------------------------
+// setup callback: main window call for everybody
+// not really a callback, but main window is still the king
+void setup_cb_all(void)
+{
+	for ( int n = 0 ; n < windowCount ; n++ )
+		windows[n]->ofAppPtr->setup();
+}
+
+//------------------------------------------------------------
 // idle callback: main window call for everybody
 glut_cb_void get_idle_cb(int _ix) {
 	if ( _ix == 0 )
-		return idle_cb_0;
+		return idle_cb_all;
 	else
 		return null_cb_void;
 }
-void idle_cb_0(void)
+void idle_cb_all(void)
 {
 	for ( int n = 0 ; n < windowCount ; n++ )
 		windows[n]->idle_cb();
@@ -40,11 +49,11 @@ void idle_cb_0(void)
 // display callback: main window call for everybody
 glut_cb_void get_display_cb(int _ix) {
 	if ( _ix == 0 )
-		return display_cb_0;
+		return display_cb_all;
 	else
 		return null_cb_void;
 }
-void display_cb_0(void)
+void display_cb_all(void)
 {
 	for ( int n = 0 ; n < windowCount ; n++ )
 		windows[n]->display();

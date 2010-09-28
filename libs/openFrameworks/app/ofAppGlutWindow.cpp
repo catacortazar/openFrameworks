@@ -3,6 +3,10 @@
 #include "ofMain.h"
 #include "ofAppRunner.h"
 
+// Hide window borders hack
+#define USE_HACKED_GLUT
+
+
 #ifdef TARGET_WIN32
 
 //------------------------------------------------
@@ -96,7 +100,7 @@ ofAppGlutWindow::ofAppGlutWindow(){
 // multi-window:
 //	in:		parent:	parent window id
 void ofAppGlutWindow::setupOpenGL(int w, int h, int screenMode){
-
+	
 	int argc = 1;
 	char *argv = (char*)"openframeworks";
 	char **vptr = &argv;
@@ -158,7 +162,7 @@ void ofAppGlutWindow::setupOpenGL(int w, int h, int screenMode){
 }
 
 //------------------------------------------------------------
-// use this window
+// bind this window as current for all of calls
 extern ofAppBaseWindow *window;	// from ofAppRunner.cpp
 void ofAppGlutWindow::bind()
 {
@@ -205,16 +209,21 @@ void ofAppGlutWindow::runAppViaInfiniteLoop(ofBaseApp * appPtr){
 
 	ofAppPtr = appPtr;
 
-	if(ofAppPtr){
-		ofAppPtr->setup();
-		ofAppPtr->update();
-	}
+	// setup all windows
+	setup_cb_all();
+	idle_cb_all();
+	
+	// Bind main window as current
+	this->bind();
+
+	// get focus
+	// TODO: Actually get focun to main window
+	glutShowWindow();
 
 	#ifdef OF_USING_POCO
 		ofNotifyEvent( ofEvents.setup, voidEventArgs );
 		ofNotifyEvent( ofEvents.update, voidEventArgs );
 	#endif
-
 
 	glutMainLoop();
 }
@@ -407,14 +416,19 @@ void ofAppGlutWindow::display(void){
 					SetSystemUIMode(kUIModeNormal,NULL);
 				#endif
 
+				//
 				// GLUT Hack
-				// OSX: If your project is including GLUT framework from /System/Lybrary or ~/Library,
-				//	replace it by the hacked version.
-				// still not working for the main window
-				// TODO: make it work, oras pois
+				//
+				// OSX:		http://github.com/rsodre/openFrameworks/tree/master/libs/glut/lib/osx/
+				// OSX WTF:	Check if your project is including GLUT framework from /System/Lybrary or ~/Library
+				//			If so, remove it and add the hacked version
+				// WTF!!!:	If this is bothering you, just comment #define USE_HACKED_GLUT above
+				// TODO:	still not working for the main window, make it work!
+				#ifdef USE_HACKED_GLUT
 				#ifdef TARGET_OSX
 				if (hideBorders)
 					of_glutHideBorders();
+				#endif
 				#endif
 			}
 			bNewScreenMode = false;
@@ -711,7 +725,6 @@ void ofAppGlutWindow::resize_cb(int w, int h) {
 
 	// multi-window
 	this->bind();
-	printf("ROGER: RESIZE win[%d]\n",windowId);
 	
 	windowW = w;
 	windowH = h;

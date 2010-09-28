@@ -2,14 +2,36 @@
  *  ofMultiWindow.h
  *  openFrameworksLib
  *
- *  Created by Roger on 27/09/10.
+ *  Created by Roger Sodre on 27/09/10.
+ * 
+ * USAGE:
+ *	- On OSX, you may need my hacked GLUT because of ofHideWindowBorders()
+ *		http://github.com/rsodre/openFrameworks/tree/master/libs/glut/lib/osx/
+ *		or comment the line #define USE_HACKED_GLUT in ofAppGlutWindow.h
+ *	- See apps/examples/multipleWindows
+ *		http://github.com/rsodre/openFrameworks/tree/master/apps/examples/multipleWindows/
+ *
+ * NOTES:
+ *	- setup, update and draw callbacks are binded only to the main window, who dispatches to all others
+ *	- keyboard callbacks are binded only to main window
+ *	- mouse callbacks are binded all windows, but work only for the window on focus
+ *	- The strange use of callbacks is because GLUT needs static functions
+ *
+ * TODO:
+ *	- Switch focus to main window when App starts (ofAppGlutWindow::runAppViaInfiniteLoop())
+ *	- Remove (ofAppGlutWindow*) casts from ofAppRunner.cpp
+ *	- Test if iPhone remained intact
+ *	- Explore mouse and resize callbacks on apps/examples/multipleWindows
  *
  */
+
 #pragma once
 
 #include "ofBaseApp.h"
 
-#define OF_MAX_WINDOWS			3
+// Maximum windows
+// To increase it, you'll have to make new static callbacks for the new windows
+#define OF_MAX_WINDOWS		3
 
 // globals
 extern ofAppGlutWindow		*windows[OF_MAX_WINDOWS];
@@ -18,12 +40,7 @@ extern int					windowCount;
 // secondary window pseudo-app
 class ofWindowApp : public ofBaseApp {
 public:
-	ofWindowApp() : ofBaseApp()
-	{
-		ofAddListener(ofEvents.setup, this, &ofWindowApp::setup);
-		//ofAddListener(ofEvents.update, this, &ofWindowApp::update);
-		//ofAddListener(ofEvents.draw, this, &ofWindowApp::draw);
-	}
+	ofWindowApp() : ofBaseApp(){}
 	virtual ~ofWindowApp(){}
 	
 	virtual void setup(){}
@@ -36,15 +53,7 @@ public:
 	virtual void mouseReleased(int x, int y, int button ){}
 	
 	virtual void windowResized(int w, int h){}
-	
-	// Current window pointer
-	ofAppGlutWindow	*win;
-	
-private:
-	void setup(ofEventArgs &e) { win->bind(); this->setup(); };
-	//void update(ofEventArgs &e) { win->bind(); this->update(); };
-	//void draw(ofEventArgs &e) { win->bind(); this->draw(); };
-	
+
 };
 
 
@@ -58,11 +67,13 @@ void		null_cb_void(void);
 void		null_cb_int2(int a, int b);
 void		null_cb_int4(int a, int b, int c, int d);
 
+void			setup_cb_all(void);
+
 glut_cb_void	get_idle_cb(int _ix);
-void			idle_cb_0(void);
+void			idle_cb_all(void);
 
 glut_cb_void	get_display_cb(int _ix);
-void			display_cb_0(void);
+void			display_cb_all(void);
 
 glut_cb_int2	get_resize_cb(int _ix);
 void			resize_cb_0(int w, int h);

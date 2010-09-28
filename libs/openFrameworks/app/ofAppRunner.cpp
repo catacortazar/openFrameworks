@@ -41,8 +41,7 @@ void ofSetupOpenGL(ofAppBaseWindow * windowPtr, int w, int h, int screenMode){
 	{
 		window = windowPtr;
 		windows[windowCount] = (ofAppGlutWindow*)window;
-		printf("ofSetupOpenGL win[%d] = [%u]\n",windowCount,(uint)window);
-		((ofAppGlutWindow*)window)->setupOpenGL(w, h, screenMode);
+		window->setupOpenGL(w, h, screenMode);
 		windowCount++;
 	}
 }
@@ -52,7 +51,6 @@ void ofSetupOpenGL(ofAppBaseWindow * windowPtr, int w, int h, int screenMode){
 void ofSetupWindow(ofWindowApp *app, int w, int h, int screenMode){
 	ofSetupOpenGL(w, h, screenMode);
 	((ofAppGlutWindow*)window)->ofAppPtr = app;
-	app->win = (ofAppGlutWindow*) window;
 	// disable clear auto or windows will swap background color
 	ofSetBackgroundAuto(false);
 }
@@ -137,7 +135,7 @@ void ofRunApp(ofBaseApp * OFSA){
 	// reverse initialize multi-windows
 	for (int i = windowCount-1 ; i >= 0 ; i--)
 		windows[i]->initializeWindow(i);
-
+	
 	ofSeedRandom();
 	ofResetElapsedTimeCounter();
 

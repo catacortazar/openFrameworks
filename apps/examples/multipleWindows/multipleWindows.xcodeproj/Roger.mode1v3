@@ -298,14 +298,13 @@
 								<string>E45BE0360E8CC5DE009D7055</string>
 								<string>E45BEED60E8CCB34009D7055</string>
 								<string>1C37FBAC04509CD000000102</string>
-								<string>1C37FABC05509CD000000102</string>
+								<string>DB6ACBE912527DF1004AE647</string>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>7</integer>
-									<integer>2</integer>
-									<integer>0</integer>
+									<integer>16</integer>
+									<integer>15</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
@@ -346,7 +345,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>windowApp.cpp</string>
+								<string>main.cpp</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -354,21 +353,20 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>windowApp.cpp</string>
+										<string>main.cpp</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>DB6ACAF012524F94004AE647</string>
+										<string>DB6ACC4012528281004AE647</string>
 										<key>history</key>
 										<array>
 											<string>DBD1F5B9125163A3008830C4</string>
 											<string>DB6AC7C512518D58004AE647</string>
-											<string>DB6AC9FB1251B25A004AE647</string>
-											<string>DB6ACA591251B9A5004AE647</string>
-											<string>DB6ACA5A1251B9A5004AE647</string>
 											<string>DB6ACAED12524F94004AE647</string>
-											<string>DB6ACAEE12524F94004AE647</string>
-											<string>DB6ACAEF12524F94004AE647</string>
+											<string>DB6ACBA612527431004AE647</string>
+											<string>DB6ACBD012527A69004AE647</string>
+											<string>DB6ACBD112527A69004AE647</string>
+											<string>DB6ACBD212527A69004AE647</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -549,7 +547,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>307384212.21885401</real>
+	<real>307397249.60726798</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>2</integer>
 	<key>ToolbarIsVisible</key>
@@ -564,12 +562,12 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>DB6ACAF112524F94004AE647</string>
+		<string>DB6ACC4112528281004AE647</string>
 		<string>DB6ACAE912524F52004AE647</string>
 		<string>DB6ACAEA12524F52004AE647</string>
-		<string>1C78EAAD065D492600B07095</string>
 		<string>DBF3ECD41159D8040053A291</string>
 		<string>1CD10A99069EF8BA00B06720</string>
+		<string>1C78EAAD065D492600B07095</string>
 		<string>/Users/Roger/Dev/OF/of-rsodre/apps/examples/multipleWindows/multipleWindows.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
@@ -611,6 +609,8 @@
 							<string>349pt</string>
 						</dict>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -785,7 +785,7 @@
 			<key>WindowToolGUID</key>
 			<string>1CD10A99069EF8BA00B06720</string>
 			<key>WindowToolIsVisible</key>
-			<true/>
+			<false/>
 		</dict>
 		<dict>
 			<key>FirstTimeWindowDisplayed</key>
@@ -895,6 +895,8 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -940,7 +942,7 @@
 			<key>WindowToolGUID</key>
 			<string>1C78EAAD065D492600B07095</string>
 			<key>WindowToolIsVisible</key>
-			<false/>
+			<true/>
 		</dict>
 		<dict>
 			<key>Identifier</key>

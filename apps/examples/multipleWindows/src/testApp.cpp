@@ -3,6 +3,8 @@
 //--------------------------------------------------------------
 void testApp::setup(){
 	
+	printf("testApp: setup()\n");
+	
 	ofEnableSmoothing();
 	
 	font.loadFont("frabk.ttf", 128);
@@ -12,10 +14,14 @@ void testApp::setup(){
 //--------------------------------------------------------------
 void testApp::update(){
 
+	//printf("testApp: update()\n");
+
 }
 
 //--------------------------------------------------------------
 void testApp::draw(){
+
+	//printf("testApp: draw()\n");
 
 	ofBackground(0);
 	

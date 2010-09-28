@@ -3,16 +3,22 @@
 //--------------------------------------------------------------
 void windowApp::setup(){
 	
+	printf("windowApp: window [%d] setup()\n", number);
+
 }
 
 //--------------------------------------------------------------
 void windowApp::update(){
-	
+
+	//printf("windowApp: window [%d] update()\n", number);
+
 }
 
 //--------------------------------------------------------------
 void windowApp::draw(){
 	
+	//printf("windowApp: window [%d] draw()\n", number);
+
 	if (number == 0)
 		ofBackground(0,0,200);
 	else

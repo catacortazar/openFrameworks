@@ -9,7 +9,7 @@ int main( ){
     ofAppGlutWindow window;
 	ofSetupOpenGL(&window, 400,200, OF_WINDOW);			// <-------- setup the GL context
 	ofSetWindowPosition(0,0);
-	//ofHideWindowBorders();	// not working yet for main window!
+	//ofHideWindowBorders();	// not working for main window!
 
 	// Additional windows
 	ofSetupWindow(new windowApp( 0 ), 200,600, OF_WINDOW);
