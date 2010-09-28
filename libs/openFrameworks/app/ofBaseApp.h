@@ -2,6 +2,7 @@
 #define _OF_BASE_APP
 
 #include "ofTypes.h"
+#include "ofEvents.h"
 
 class ofBaseApp{
 

@@ -25,7 +25,8 @@ public:
 	~ofAppGlutWindow(){}
 
 	void setupOpenGL(int w, int h, int screenMode);
-	void initializeWindow();
+	void bind();
+	void initializeWindow(int i);
 	void runAppViaInfiniteLoop(ofBaseApp * appPtr);
 	
 	//note if you fail to set a compatible string the app will not launch
@@ -57,19 +58,56 @@ public:
 	void		enableSetupScreen();
 	void		disableSetupScreen();
 
-	static void display(void);
-	static void mouse_cb(int button, int state, int x, int y);
-	static void motion_cb(int x, int y);
-	static void passive_motion_cb(int x, int y);
-	static void idle_cb(void);
-	static void keyboard_cb(unsigned char key, int x, int y);
-	static void keyboard_up_cb(unsigned char key, int x, int y);
-	static void special_key_cb(int key, int x, int y) ;
-	static void special_key_up_cb(int key, int x, int y) ;
-	static void resize_cb(int w, int h);
-
+	// multi-window
+	// not static anymore!
+	void display(void);
+	void mouse_cb(int button, int state, int x, int y);
+	void motion_cb(int x, int y);
+	void passive_motion_cb(int x, int y);
+	void idle_cb(void);
+	void resize_cb(int w, int h);
+	void keyboard_cb(unsigned char key, int x, int y);
+	void keyboard_up_cb(unsigned char key, int x, int y);
+	void special_key_cb(int key, int x, int y) ;
+	void special_key_up_cb(int key, int x, int y) ;
 
 	string displayString;
-	 
+
+	// multi-window
+	// this all can be here now, we'll make the callbacks outside
+	int				windowMode;
+	bool			bNewScreenMode;
+	float			timeNow, timeThen, fps;
+	int				nFramesForFPS;
+	int				nFrameCount;
+	int				buttonInUse;
+	bool			bEnableSetupScreen;
+	
+	bool			bFrameRateSet;
+	int 			millisForFrame;
+	int 			prevMillis;
+	int 			diffMillis;
+	
+	float 			frameRate;
+	
+	double			lastFrameTime;
+	
+	int				requestedWidth;
+	int				requestedHeight;
+	int 			nonFullScreenX;
+	int 			nonFullScreenY;
+	int				windowW;
+	int				windowH;
+	int				mouseX, mouseY;
+	ofBaseApp *		ofAppPtr;
+
+	int             nFramesSinceWindowResized;
+	
+	// multi-window
+	bool			isMain;
+	int				windowId;
+	bool			hideBorders;
 };
+
+#include "ofMultiWindow.h"
 

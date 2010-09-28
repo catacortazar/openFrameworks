@@ -7,7 +7,6 @@ ofBaseApp	*				OFSAptr = NULL;
 bool 						bMousePressed;
 bool						bRightButton;
 int							width, height;
-
 ofAppBaseWindow *			window = NULL;
 
 //========================================================================
@@ -27,21 +26,42 @@ ofEventArgs					voidEventArgs;
 
 
 //--------------------------------------
-void ofSetupOpenGL(ofAppBaseWindow * windowPtr, int w, int h, int screenMode){
-	window = windowPtr;
-	window->setupOpenGL(w, h, screenMode);
+void ofSetupOpenGL(int w, int h, int screenMode){
+#ifdef TARGET_OF_IPHONE
+	ofSetupOpenGL( new ofAppiPhoneWindow(), w, h, screenMode );
+#else
+	ofSetupOpenGL( new ofAppGlutWindow(), w, h, screenMode );
+#endif
 }
 
+//--------------------------------------
+void ofSetupOpenGL(ofAppBaseWindow * windowPtr, int w, int h, int screenMode){
+	// multi-window
+	if (windowCount < OF_MAX_WINDOWS)
+	{
+		window = windowPtr;
+		windows[windowCount] = (ofAppGlutWindow*)window;
+		printf("ofSetupOpenGL win[%d] = [%u]\n",windowCount,(uint)window);
+		((ofAppGlutWindow*)window)->setupOpenGL(w, h, screenMode);
+		windowCount++;
+	}
+}
 
 //--------------------------------------
-void ofSetupOpenGL(int w, int h, int screenMode){
-	#ifdef TARGET_OF_IPHONE
-		window = new ofAppiPhoneWindow();
-	#else
-		window = new ofAppGlutWindow();
-	#endif
+// setup secondary window
+void ofSetupWindow(ofWindowApp *app, int w, int h, int screenMode){
+	ofSetupOpenGL(w, h, screenMode);
+	((ofAppGlutWindow*)window)->ofAppPtr = app;
+	app->win = (ofAppGlutWindow*) window;
+	// disable clear auto or windows will swap background color
+	ofSetBackgroundAuto(false);
+}
 
-	window->setupOpenGL(w, h, screenMode);
+//--------------------------------------
+// Hides window border / title bar
+void ofHideWindowBorders()
+{
+	((ofAppGlutWindow*)window)->hideBorders = true;
 }
 
 //----------------------- 	gets called when the app exits
@@ -110,7 +130,9 @@ void ofRunApp(ofBaseApp * OFSA){
 
 	#endif
 
-	window->initializeWindow();
+	// reverse initialize multi-windows
+	for (int i = windowCount-1 ; i >= 0 ; i--)
+		windows[i]->initializeWindow(i);
 
 	ofSeedRandom();
 	ofResetElapsedTimeCounter();

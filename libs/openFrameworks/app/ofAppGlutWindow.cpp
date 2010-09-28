@@ -1,36 +1,7 @@
 #include "ofAppGlutWindow.h"
 #include "ofBaseApp.h"
 #include "ofMain.h"
-
-// glut works with static callbacks UGH, so we need static variables here:
-
-int				windowMode;
-bool			bNewScreenMode;
-float			timeNow, timeThen, fps;
-int				nFramesForFPS;
-int				nFrameCount;
-int				buttonInUse;
-bool			bEnableSetupScreen;
-
-bool			bFrameRateSet;
-int 			millisForFrame;
-int 			prevMillis;
-int 			diffMillis;
-
-float 			frameRate;
-
-double			lastFrameTime;
-
-int				requestedWidth;
-int				requestedHeight;
-int 			nonFullScreenX;
-int 			nonFullScreenY;
-int				windowW;
-int				windowH;
-int				mouseX, mouseY;
-ofBaseApp *		ofAppPtr;
-
-int             nFramesSinceWindowResized;
+#include "ofAppRunner.h"
 
 #ifdef TARGET_WIN32
 
@@ -109,6 +80,7 @@ ofAppGlutWindow::ofAppGlutWindow(){
 	mouseY				= 0;
 	lastFrameTime		= 0.0;
 	displayString		= "";
+	hideBorders			= false;
 
 }
 
@@ -121,12 +93,16 @@ ofAppGlutWindow::ofAppGlutWindow(){
  }
 
 //------------------------------------------------------------
+// multi-window:
+//	in:		parent:	parent window id
 void ofAppGlutWindow::setupOpenGL(int w, int h, int screenMode){
 
 	int argc = 1;
 	char *argv = (char*)"openframeworks";
 	char **vptr = &argv;
-	glutInit(&argc, vptr);
+	
+	if (windowCount == 0)
+		glutInit(&argc, vptr);
 
 	if( displayString != ""){
 		glutInitDisplayString( displayString.c_str() );
@@ -139,7 +115,9 @@ void ofAppGlutWindow::setupOpenGL(int w, int h, int screenMode){
 
 	if (windowMode != OF_GAME_MODE){
 		glutInitWindowSize(w, h);
-		glutCreateWindow("");
+		
+		// multi-diplay
+		windowId = glutCreateWindow("");
 
 		//Default colors etc are now in ofGraphics - ofSetupGraphicDefaults
 		ofSetupGraphicDefaults();
@@ -180,24 +158,36 @@ void ofAppGlutWindow::setupOpenGL(int w, int h, int screenMode){
 }
 
 //------------------------------------------------------------
-void ofAppGlutWindow::initializeWindow(){
+// use this window
+extern ofAppBaseWindow *window;	// from ofAppRunner.cpp
+void ofAppGlutWindow::bind()
+{
+	window = this;
+	glutSetWindow(windowId);
+}
 
+//------------------------------------------------------------
+void ofAppGlutWindow::initializeWindow(int i){
 
+	this->bind();
+	
     //----------------------
-    // setup the callbacks
+    // setup callbacks
+    glutIdleFunc(get_idle_cb(i));
+    glutDisplayFunc(get_display_cb(i));
+	glutReshapeFunc(get_resize_cb(i));
+    glutMouseFunc(get_mouse_cb(i));
+    glutMotionFunc(get_motion_cb(i));
+    glutPassiveMotionFunc(get_passive_motion_cb(i));
 
-    glutMouseFunc(mouse_cb);
-    glutMotionFunc(motion_cb);
-    glutPassiveMotionFunc(passive_motion_cb);
-    glutIdleFunc(idle_cb);
-    glutDisplayFunc(display);
-
-    glutKeyboardFunc(keyboard_cb);
-    glutKeyboardUpFunc(keyboard_up_cb);
-    glutSpecialFunc(special_key_cb);
-    glutSpecialUpFunc(special_key_up_cb);
-
-    glutReshapeFunc(resize_cb);
+	// main window only
+	if (i == 0)
+	{
+		glutKeyboardFunc(keyboard_cb_main);
+		glutKeyboardUpFunc(keyboard_up_cb_main);
+		glutSpecialFunc(special_key_cb_main);
+		glutSpecialUpFunc(special_key_up_cb_main);
+	}
 
     nFramesSinceWindowResized = 0;
 
@@ -374,6 +364,9 @@ void ofAppGlutWindow::disableSetupScreen(){
 void ofAppGlutWindow::display(void){
 	static ofEventArgs voidEventArgs;
 
+	// multi-window
+	this->bind();
+
 	//--------------------------------
 	// when I had "glutFullScreen()"
 	// in the initOpenGl, I was gettings a "heap" allocation error
@@ -412,6 +405,16 @@ void ofAppGlutWindow::display(void){
 
 				#ifdef TARGET_OSX
 					SetSystemUIMode(kUIModeNormal,NULL);
+				#endif
+
+				// GLUT Hack
+				// OSX: If your project is including GLUT framework from /System/Lybrary or ~/Library,
+				//	replace it by the hacked version.
+				// still not working for the main window
+				// TODO: make it work, oras pois
+				#ifdef TARGET_OSX
+				if (hideBorders)
+					of_glutHideBorders();
 				#endif
 			}
 			bNewScreenMode = false;
@@ -495,6 +498,9 @@ void ofAppGlutWindow::display(void){
 void ofAppGlutWindow::mouse_cb(int button, int state, int x, int y) {
 	static ofMouseEventArgs mouseEventArgs;
 
+	// multi-window
+	this->bind();
+	
 	if (nFrameCount > 0){
 		if(ofAppPtr){
 		ofAppPtr->mouseX = x;
@@ -532,6 +538,9 @@ void ofAppGlutWindow::mouse_cb(int button, int state, int x, int y) {
 void ofAppGlutWindow::motion_cb(int x, int y) {
 	static ofMouseEventArgs mouseEventArgs;
 
+	// multi-window
+	this->bind();
+	
 	if (nFrameCount > 0){
 		if(ofAppPtr){
 		ofAppPtr->mouseX = x;
@@ -553,6 +562,9 @@ void ofAppGlutWindow::motion_cb(int x, int y) {
 void ofAppGlutWindow::passive_motion_cb(int x, int y) {
 	static ofMouseEventArgs mouseEventArgs;
 
+	// multi-window
+	this->bind();
+	
 	if (nFrameCount > 0){
 		if(ofAppPtr){
 		ofAppPtr->mouseX = x;
@@ -570,9 +582,12 @@ void ofAppGlutWindow::passive_motion_cb(int x, int y) {
 
 
 //------------------------------------------------------------
-void ofAppGlutWindow::idle_cb(void) {
+void ofAppGlutWindow::idle_cb() {
 	static ofEventArgs voidEventArgs;
-
+	
+	// multi-window
+	this->bind();
+	
 	//	thanks to jorge for the fix:
 	//	http://www.openframeworks.cc/forum/viewtopic.php?t=515&highlight=frame+rate
 
@@ -626,6 +641,9 @@ void ofAppGlutWindow::idle_cb(void) {
 void ofAppGlutWindow::keyboard_cb(unsigned char key, int x, int y) {
 	static ofKeyEventArgs keyEventArgs;
 
+	// multi-window
+	this->bind();
+	
 	if(ofAppPtr)
 		ofAppPtr->keyPressed(key);
 
@@ -643,6 +661,9 @@ void ofAppGlutWindow::keyboard_cb(unsigned char key, int x, int y) {
 void ofAppGlutWindow::keyboard_up_cb(unsigned char key, int x, int y) {
 	static ofKeyEventArgs keyEventArgs;
 
+	// multi-window
+	this->bind();
+	
 	if(ofAppPtr)
 		ofAppPtr->keyReleased(key);
 
@@ -656,6 +677,9 @@ void ofAppGlutWindow::keyboard_up_cb(unsigned char key, int x, int y) {
 void ofAppGlutWindow::special_key_cb(int key, int x, int y) {
 	static ofKeyEventArgs keyEventArgs;
 
+	// multi-window
+	this->bind();
+	
 	if(ofAppPtr)
 		ofAppPtr->keyPressed(key | OF_KEY_MODIFIER);
 
@@ -669,6 +693,9 @@ void ofAppGlutWindow::special_key_cb(int key, int x, int y) {
 void ofAppGlutWindow::special_key_up_cb(int key, int x, int y) {
 	static ofKeyEventArgs keyEventArgs;
 
+	// multi-window
+	this->bind();
+	
 	if(ofAppPtr)
 		ofAppPtr->keyReleased(key | OF_KEY_MODIFIER);
 
@@ -682,6 +709,10 @@ void ofAppGlutWindow::special_key_up_cb(int key, int x, int y) {
 void ofAppGlutWindow::resize_cb(int w, int h) {
 	static ofResizeEventArgs resizeEventArgs;
 
+	// multi-window
+	this->bind();
+	printf("ROGER: RESIZE win[%d]\n",windowId);
+	
 	windowW = w;
 	windowH = h;
 

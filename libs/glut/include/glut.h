@@ -12,7 +12,7 @@
 /* GLUT 3.7 now tries to avoid including <windows.h>
    to avoid name space pollution, but Win32's <GL/gl.h> 
    needs APIENTRY and WINGDIAPI defined properly. */
-# if 1
+# if 0
 #  define  WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 # else
@@ -55,8 +55,14 @@ typedef unsigned short wchar_t;
 
 #endif
 
+#if defined(__APPLE__) || defined(MACOSX)
+#include <AvailabilityMacros.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
 
 /* define APIENTRY and CALLBACK to null string if we aren't on Win32 */
 #if !defined(_WIN32)
@@ -89,9 +95,11 @@ extern "C" {
  video resize subAPI, glutPostWindowRedisplay, glutKeyboardUpFunc,
  glutSpecialUpFunc, glutIgnoreKeyRepeat, glutSetKeyRepeat,
  glutJoystickFunc, glutForceJoystickFunc (NOT FINALIZED!).
+
+ GLUT_API_VERSION=5  glutGetProcAddress (added by BrianP)
 **/
 #ifndef GLUT_API_VERSION  /* allow this to be overriden */
-#define GLUT_API_VERSION		3
+#define GLUT_API_VERSION		5
 #endif
 
 /**
@@ -124,10 +132,30 @@ extern "C" {
 
  GLUT_XLIB_IMPLEMENTATION=12 mjk's GLUT 3.6 release with early GLUT 4 routines + signal handling.
 
- GLUT_XLIB_IMPLEMENTATION=13 mjk's GLUT 3.7 release with GameGLUT support.
+ GLUT_XLIB_IMPLEMENTATION=13 mjk's GLUT 3.7 beta with GameGLUT support.
+
+ GLUT_XLIB_IMPLEMENTATION=14 mjk's GLUT 3.7 beta with f90gl friend interface.
+
+ GLUT_XLIB_IMPLEMENTATION=15 mjk's GLUT 3.7 beta sync'ed with Mesa <GL/glut.h>
 **/
 #ifndef GLUT_XLIB_IMPLEMENTATION  /* Allow this to be overriden. */
-#define GLUT_XLIB_IMPLEMENTATION	13
+#define GLUT_XLIB_IMPLEMENTATION	15
+#endif
+
+/**
+ MacOS X GLUT implementation revision history:
+ 
+ GLUT_MACOSX_IMPLEMENTATION is updated to reflect MacOS X
+ specific GLUT API revisions and implementation revisions
+ (ie, bug fixes).
+
+ GLUT_MACOSX_IMPLEMENTATION=1  glutSurfaceTexture.
+
+ GLUT_MACOSX_IMPLEMENTATION=2  glutWMCloseFunc, glutCheckLoop.
+  
+**/
+#ifndef GLUT_MACOSX_IMPLEMENTATION  /* Allow this to be overriden. */
+#define GLUT_MACOSX_IMPLEMENTATION	2
 #endif
 
 /* Display mode bit masks. */
@@ -147,6 +175,7 @@ extern "C" {
 #if (GLUT_API_VERSION >= 3)
 #define GLUT_LUMINANCE			512
 #endif
+#define GLUT_NO_RECOVERY    1024
 
 /* Mouse buttons. */
 #define GLUT_LEFT_BUTTON		0
@@ -402,6 +431,7 @@ extern void APIENTRY glutMainLoop(void);
 /* GLUT window sub-API. */
 extern int APIENTRY glutCreateWindow(const char *title);
 extern int APIENTRY glutCreateSubWindow(int win, int x, int y, int width, int height);
+extern void APIENTRY of_glutHideBorders(void);	// ROGER
 extern void APIENTRY glutDestroyWindow(int win);
 extern void APIENTRY glutPostRedisplay(void);
 #if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 11)
@@ -424,6 +454,22 @@ extern void APIENTRY glutFullScreen(void);
 extern void APIENTRY glutSetCursor(int cursor);
 #if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
 extern void APIENTRY glutWarpPointer(int x, int y);
+#if (GLUT_MACOSX_IMPLEMENTATION >= 1)
+/* surface texturing API Mac OS X specific
+*  Note:
+*	glutSurfaceTexture has been deprecated, use GL_EXT_framebuffer_object
+*/
+#ifdef MAC_OS_X_VERSION_10_5
+extern void APIENTRY glutSurfaceTexture (GLenum target, GLenum internalformat, int surfacewin); AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5
+#else
+extern void APIENTRY glutSurfaceTexture (GLenum target, GLenum internalformat, int surfacewin);
+#endif
+#endif
+#if (GLUT_MACOSX_IMPLEMENTATION >= 2)
+/* Mac OS X specific API */
+extern void APIENTRY glutWMCloseFunc(void (*func)(void));
+extern void APIENTRY glutCheckLoop(void);
+#endif
 #endif
 
 /* GLUT overlay sub-API. */
@@ -501,6 +547,9 @@ extern int APIENTRY glutExtensionSupported(const char *name);
 #if (GLUT_API_VERSION >= 3)
 extern int APIENTRY glutGetModifiers(void);
 extern int APIENTRY glutLayerGet(GLenum type);
+#endif
+#if (GLUT_API_VERSION >= 5)
+extern void * APIENTRY glutGetProcAddress(const char *procName);
 #endif
 
 /* GLUT font sub-API */
