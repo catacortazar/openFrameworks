@@ -64,6 +64,7 @@ public:
 	void mouse_cb(int button, int state, int x, int y);
 	void motion_cb(int x, int y);
 	void passive_motion_cb(int x, int y);
+	void setup_cb(void);
 	void idle_cb(void);
 	void resize_cb(int w, int h);
 	void keyboard_cb(unsigned char key, int x, int y);

@@ -17,6 +17,19 @@ int							windowCount = 0;
 
 
 //------------------------------------------------------------
+void ofUnbindWindow()
+{
+	windows[0]->bind();
+}
+
+//------------------------------------------------------------
+bool ofIsMainWindow()
+{
+	return (window == windows[0]);
+}
+
+
+//------------------------------------------------------------
 // null callbacks
 void null_cb_void(void) {}
 void null_cb_int2(int a, int b) {}
@@ -28,7 +41,7 @@ void null_cb_int4(int a, int b, int c, int d) {}
 void setup_cb_all(void)
 {
 	for ( int n = 0 ; n < windowCount ; n++ )
-		windows[n]->ofAppPtr->setup();
+		windows[n]->setup_cb();
 }
 
 //------------------------------------------------------------

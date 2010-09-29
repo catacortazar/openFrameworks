@@ -140,7 +140,6 @@ void ofRunApp(ofBaseApp * OFSA){
 	ofResetElapsedTimeCounter();
 
 	window->runAppViaInfiniteLoop(OFSAptr);
-
 }
 
 //--------------------------------------

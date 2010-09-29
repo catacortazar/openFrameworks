@@ -4,7 +4,7 @@
 #include "ofAppRunner.h"
 
 // Hide window borders hack
-//#define USE_HACKED_GLUT
+#define USE_HACKED_GLUT
 
 
 #ifdef TARGET_WIN32
@@ -201,29 +201,21 @@ void ofAppGlutWindow::initializeWindow(int i){
         fixCloseWindowOnWin32();
     #endif
 
+	ofUnbindWindow();
 }
 
 //------------------------------------------------------------
 void ofAppGlutWindow::runAppViaInfiniteLoop(ofBaseApp * appPtr){
-	static ofEventArgs voidEventArgs;
 
 	ofAppPtr = appPtr;
 
-	// setup all windows
+	// setup() all windows
 	setup_cb_all();
 	idle_cb_all();
 	
-	// Bind main window as current
-	this->bind();
-
 	// get focus
 	// TODO: Actually get focun to main window
 	glutShowWindow();
-
-	#ifdef OF_USING_POCO
-		ofNotifyEvent( ofEvents.setup, voidEventArgs );
-		ofNotifyEvent( ofEvents.update, voidEventArgs );
-	#endif
 
 	glutMainLoop();
 }
@@ -296,6 +288,9 @@ void ofAppGlutWindow::setWindowShape(int w, int h){
 	// this is useful, esp if we are in the first frame (setup):
 	requestedWidth  = w;
 	requestedHeight = h;
+	// make size available to ofGetWidth()/ofGetHeight()
+	windowW = w;
+	windowH = h;
 }
 
 //------------------------------------------------------------
@@ -467,6 +462,7 @@ void ofAppGlutWindow::display(void){
 		ofAppPtr->draw();
 
 	#ifdef OF_USING_POCO
+	if (ofIsMainWindow())	// notify once
 		ofNotifyEvent( ofEvents.draw, voidEventArgs );
 	#endif
 
@@ -505,7 +501,6 @@ void ofAppGlutWindow::display(void){
 	nFrameCount++;		// increase the overall frame count
 
 	//setFrameNum(nFrameCount); // get this info to ofUtils for people to access
-
 }
 
 //------------------------------------------------------------
@@ -526,9 +521,10 @@ void ofAppGlutWindow::mouse_cb(int button, int state, int x, int y) {
 				ofAppPtr->mousePressed(x,y,button);
 
 			#ifdef OF_USING_POCO
-				mouseEventArgs.x = x;
-				mouseEventArgs.y = y;
-				mouseEventArgs.button = button;
+			mouseEventArgs.x = x;
+			mouseEventArgs.y = y;
+			mouseEventArgs.button = button;
+			if (ofIsMainWindow())	// notify once
 				ofNotifyEvent( ofEvents.mousePressed, mouseEventArgs );
 			#endif
 		} else if (state == GLUT_UP) {
@@ -538,14 +534,17 @@ void ofAppGlutWindow::mouse_cb(int button, int state, int x, int y) {
 			}
 
 			#ifdef OF_USING_POCO
-				mouseEventArgs.x = x;
-				mouseEventArgs.y = y;
-				mouseEventArgs.button = button;
+			mouseEventArgs.x = x;
+			mouseEventArgs.y = y;
+			mouseEventArgs.button = button;
+			if (ofIsMainWindow())	// notify once
 				ofNotifyEvent( ofEvents.mouseReleased, mouseEventArgs );
 			#endif
 		}
 		buttonInUse = button;
 	}
+
+	ofUnbindWindow();
 }
 
 //------------------------------------------------------------
@@ -563,13 +562,15 @@ void ofAppGlutWindow::motion_cb(int x, int y) {
 		}
 
 		#ifdef OF_USING_POCO
-			mouseEventArgs.x = x;
-			mouseEventArgs.y = y;
-			mouseEventArgs.button = buttonInUse;
+		mouseEventArgs.x = x;
+		mouseEventArgs.y = y;
+		mouseEventArgs.button = buttonInUse;
+		if (ofIsMainWindow())	// notify once
 			ofNotifyEvent( ofEvents.mouseDragged, mouseEventArgs );
 		#endif
 	}
 
+	ofUnbindWindow();
 }
 
 //------------------------------------------------------------
@@ -587,11 +588,14 @@ void ofAppGlutWindow::passive_motion_cb(int x, int y) {
 		}
 
 		#ifdef OF_USING_POCO
-			mouseEventArgs.x = x;
-			mouseEventArgs.y = y;
+		mouseEventArgs.x = x;
+		mouseEventArgs.y = y;
+		if (ofIsMainWindow())	// notify once
 			ofNotifyEvent( ofEvents.mouseMoved, mouseEventArgs );
 		#endif
 	}
+
+	ofUnbindWindow();
 }
 
 
@@ -643,11 +647,33 @@ void ofAppGlutWindow::idle_cb() {
 	if(ofAppPtr)
 		ofAppPtr->update();
 
-		#ifdef OF_USING_POCO
+	#ifdef OF_USING_POCO
+	if (ofIsMainWindow())	// notify once
 		ofNotifyEvent( ofEvents.update, voidEventArgs);
-		#endif
+	#endif
 
 	glutPostRedisplay();
+
+	ofUnbindWindow();
+}
+
+
+//------------------------------------------------------------
+void ofAppGlutWindow::setup_cb() {
+	static ofEventArgs voidEventArgs;
+
+	// multi-window
+	this->bind();
+	
+	if(ofAppPtr)
+		ofAppPtr->setup();
+	
+	#ifdef OF_USING_POCO
+	if (ofIsMainWindow())	// notify once
+		ofNotifyEvent( ofEvents.setup, voidEventArgs );
+	#endif
+	
+	ofUnbindWindow();
 }
 
 
@@ -662,13 +688,16 @@ void ofAppGlutWindow::keyboard_cb(unsigned char key, int x, int y) {
 		ofAppPtr->keyPressed(key);
 
 	#ifdef OF_USING_POCO
-		keyEventArgs.key = key;
+	keyEventArgs.key = key;
+	if (ofIsMainWindow())	// notify once
 		ofNotifyEvent( ofEvents.keyPressed, keyEventArgs );
 	#endif
 
 	if (key == OF_KEY_ESC){				// "escape"
 		exitApp();
 	}
+
+	ofUnbindWindow();
 }
 
 //------------------------------------------------------------
@@ -682,9 +711,12 @@ void ofAppGlutWindow::keyboard_up_cb(unsigned char key, int x, int y) {
 		ofAppPtr->keyReleased(key);
 
 	#ifdef OF_USING_POCO
-		keyEventArgs.key = key;
+	keyEventArgs.key = key;
+	if (ofIsMainWindow())	// notify once
 		ofNotifyEvent( ofEvents.keyReleased, keyEventArgs );
 	#endif
+
+	ofUnbindWindow();
 }
 
 //------------------------------------------------------
@@ -698,9 +730,12 @@ void ofAppGlutWindow::special_key_cb(int key, int x, int y) {
 		ofAppPtr->keyPressed(key | OF_KEY_MODIFIER);
 
 	#ifdef OF_USING_POCO
-		keyEventArgs.key = (key | OF_KEY_MODIFIER);
+	keyEventArgs.key = (key | OF_KEY_MODIFIER);
+	if (ofIsMainWindow())	// notify once
 		ofNotifyEvent( ofEvents.keyPressed, keyEventArgs );
 	#endif
+
+	ofUnbindWindow();
 }
 
 //------------------------------------------------------------
@@ -714,9 +749,12 @@ void ofAppGlutWindow::special_key_up_cb(int key, int x, int y) {
 		ofAppPtr->keyReleased(key | OF_KEY_MODIFIER);
 
 	#ifdef OF_USING_POCO
-		keyEventArgs.key = (key | OF_KEY_MODIFIER);
+	keyEventArgs.key = (key | OF_KEY_MODIFIER);
+	if (ofIsMainWindow())	// notify once
 		ofNotifyEvent( ofEvents.keyReleased, keyEventArgs );
 	#endif
+
+	ofUnbindWindow();
 }
 
 //------------------------------------------------------------
@@ -733,10 +771,13 @@ void ofAppGlutWindow::resize_cb(int w, int h) {
 		ofAppPtr->windowResized(w,h);
 
 	#ifdef OF_USING_POCO
-		resizeEventArgs.width = w;
-		resizeEventArgs.height = h;
+	resizeEventArgs.width = w;
+	resizeEventArgs.height = h;
+	if (ofIsMainWindow())	// notify once	// notify once
 		ofNotifyEvent( ofEvents.windowResized, resizeEventArgs );
 	#endif
 
 	nFramesSinceWindowResized = 0;
+
+	ofUnbindWindow();
 }

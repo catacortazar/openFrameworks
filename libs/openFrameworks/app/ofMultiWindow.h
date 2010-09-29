@@ -5,9 +5,6 @@
  *  Created by Roger Sodre on 27/09/10.
  * 
  * USAGE:
- *	- On OSX, you may need my hacked GLUT because of ofHideWindowBorders()
- *		http://github.com/rsodre/openFrameworks/tree/master/libs/glut/lib/osx/
- *		or comment the line #define USE_HACKED_GLUT in ofAppGlutWindow.h
  *	- See apps/examples/multipleWindows
  *		http://github.com/rsodre/openFrameworks/tree/master/apps/examples/multipleWindows/
  *
@@ -55,6 +52,13 @@ public:
 	virtual void windowResized(int w, int h){}
 
 };
+
+
+
+// set main wiundow as current
+void ofUnbindWindow();
+bool ofIsMainWindow();
+
 
 
 // Callback signatures
