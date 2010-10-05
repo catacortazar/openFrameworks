@@ -34,7 +34,7 @@
 
 #define GLUT_UNKNOWN_VISIBILITY		(GLUT_FULLY_COVERED+1)
 #define GLUT_NORMAL_LEVEL				NSNormalWindowLevel
-#define GLUT_FULLSCREEN_LEVEL			(NSPopUpMenuWindowLevel-1)
+#define GLUT_FULLSCREEN_LEVEL			(NSNormalWindowLevel)
 #define GLUT_GAMEMODE_LEVEL			CGShieldingWindowLevel()
 #define GLUT_DEFAULT_IDLE_INTERVAL	0.016		/* ca. 60Hz */
 #define GLUT_DEFAULT_FADE_INTERVAL	0.75     /* 0.75 second */
