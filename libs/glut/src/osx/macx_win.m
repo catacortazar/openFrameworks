@@ -507,6 +507,11 @@ void APIENTRY of_glutHideBorders(void)
 {
 	[[__glutCurrentView window] setStyleMask:NSBorderlessWindowMask];
 }
+NSOpenGLContext* APIENTRY of_glutGetOpengLContext(void)
+{
+	return [__glutCurrentView openGLContext];
+}
+
 
 /* ENDCENTRY */
 

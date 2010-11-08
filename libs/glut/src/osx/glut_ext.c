@@ -74,6 +74,7 @@ const static struct name_address_pair glut_functions[] = {
    { "glutCreateWindow", (const void *) glutCreateWindow },
    { "glutCreateSubWindow", (const void *) glutCreateSubWindow },
 	{ "of_glutHideBorders", (const void *) of_glutHideBorders },	// ROGER
+	{ "of_glutGetOpengLContext", (const NSOpenGLContext **) of_glutGetOpengLContext },	// ROGER
    { "glutDestroyWindow", (const void *) glutDestroyWindow },
    { "glutPostRedisplay", (const void *) glutPostRedisplay },
    { "glutPostWindowRedisplay", (const void *) glutPostWindowRedisplay },
