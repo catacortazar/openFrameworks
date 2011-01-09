@@ -143,3 +143,26 @@ int ofxDirList::listDir(string directory){
 	ofLog(OF_LOG_VERBOSE, "ofxDirList - listed %i files in %s", nameArray.size(), directory.c_str());
 	return nameArray.size();
 }
+
+
+// ROGER
+//----------------------------------------------------------
+bool ofxDirList::existDir(string directory){
+    directory = ofToDataPath(directory);
+	
+    if(directory.length() <= 0)return false;
+	
+    //if the trailing slash was not added - then add it
+	if( directory[directory.length()-1] != '/'){
+        directory = directory + "/";
+	}
+	
+	DIR *dir = NULL;
+    dir = opendir(directory.c_str());
+	// Do not exist
+	if(dir == NULL)
+		return false;
+	// Exist
+	closedir(dir);
+	return true;
+}

@@ -37,6 +37,9 @@ class ofxDirList{
         void reset();												// resets extension list
 		bool allowExt(string ext);									// returns true if ext is accepted
 		int listDir(string directory);								// returns number of files found
+		
+		// ROGER
+		bool existDir(string directory);								// returns if dir exist
 
 	private:
         vector <string> allowedFileExt;
