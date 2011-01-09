@@ -81,8 +81,8 @@ class ofTexture : public ofBaseDraws{
 	void draw(ofPoint p1, ofPoint p2, ofPoint p3, ofPoint p4);
 
 	//for the advanced user who wants to draw textures in their own way
-	void bind();
-	void unbind();
+	virtual void bind();
+	virtual void unbind();
 	
 	// these are helpers to allow you to get points for the texture ala "glTexCoordf" 
 	// but are texture type independent. 
