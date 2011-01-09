@@ -15,6 +15,7 @@ ofBaseApp * ofGetAppPtr();
 
 //-------------------------- GLUT Hack
 void		ofHideWindowBorders();
+void		ofSetWindowOnTop(bool ontop=true);
 
 
 //-------------------------- time

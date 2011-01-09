@@ -57,6 +57,13 @@ void ofSetupWindow(ofWindowApp *app, int w, int h, int screenMode){
 
 //--------------------------------------
 // Hides window border / title bar
+void ofSetWindowOnTop(bool ontop)
+{
+	((ofAppGlutWindow*)window)->setWindowOnTop(ontop);
+}
+
+//--------------------------------------
+// Hides window border / title bar
 void ofHideWindowBorders()
 {
 	((ofAppGlutWindow*)window)->hideBorders = true;
