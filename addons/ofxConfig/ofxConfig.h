@@ -15,8 +15,6 @@
 
 
 
-
-
 ////////////////////////////////////////
 //
 // CONFIG FOR CINDER
@@ -44,6 +42,10 @@ typedef cinder::Color8u ofColor;
 #define CFG_USE_OFXMIDI
 #define CFG_USE_OFXOSC
 #define CFG_CATCH_LOOP_EVENTS
+#endif
+// Cococa integration
+#ifdef __OBJC__
+#import <Cocoa/Cocoa.h>
 #endif
 
 //
@@ -76,8 +78,21 @@ typedef osc::Message ofxOscMessage;
 // MISC
 #include <string.h>
 
+#ifndef TWO_PI
+#define TWO_PI (M_PI*2.0f)
+#endif
+#ifndef HALF_PI
+#define HALF_PI (M_PI/2.0f)
+#endif
+
 #define	CFG_MAX_DATA_LEN		4096
 #define FLOAT_VEC				vector<float>
+
+// Cocoa
+// Convert NSString <-> C char* string
+#define STR2NSS(str)			([NSString stringWithUTF8String:(const char*)(str)])
+#define NSS2STR(nsstr)			((char*)[(nsstr) UTF8String])
+
 
 //
 // Types
@@ -293,13 +308,14 @@ public:
 	// Value labels
 	void setValueLabels(short id, const char *val0, ...);
 	void setValueLabels(short id, const char labels[][64]);
-	const char* getValueLabel(short id, int ix);
+	void setValueLabel(short id, int item, const char labels[64]);
+	const char* getValueLabel(short id, int item);
 
 	// Getters
 	const char* getName(int id) { return params[id]->name.c_str(); };
 	short getType(int id) { return params[id]->type; };
 	bool isFresh() { return freshness; };									// global freshness
-	bool unfresh() { freshness = false; };									// global freshness
+	void unfresh() { freshness = false; };									// global freshness
 	//bool isFresh(int id, int i=0) { return params[id]->vec[i].fresh; };	// individual freshness
 	// Get limits
 	float getMin(int id);
@@ -344,6 +360,9 @@ public:
 	const char* getString(int id, bool raw=false);
 	ofColor getColor(int id);
 	ofPoint getVector(int id);
+	// Normalized getters
+	float getDegrees(int id);
+	float getRadians(int id);
 	
 	//
 	// Operations
@@ -385,15 +404,30 @@ public:
 	
 	//
 	// READ / SAVE to file
-	string getFullFilename(const char *filename);
+	string getFullFilename(const char *filename, const char* path=NULL);
 	virtual int readFile(const char *filename);
 	virtual int saveFile(const char *filename);
 	const char* getSaveTime();
 	// Shortcuts
-	virtual int useFile(const char *filename);
+	virtual int setFile(const char *filename, const char* path=NULL);
+	virtual int useFile(const char *filename, const char* path=NULL);
 	virtual int save() { return this->saveFile(NULL); };
 	virtual int load() { return this->readFile(NULL); };
 
+#ifdef __OBJC__
+	// Cococa integration
+	void cocoaSetupSlider(int id, NSSlider *slider);
+	void cocoaSetupButton(int id, NSButton *button);
+	void cocoaSetupPopup(int id, NSPopUpButton *pop);
+	void cocoaSetupSeg(int id, NSSegmentedControl *pop);
+
+	void cocoaReadSlider(int id, NSSlider *slider);
+	void cocoaReadButton(int id, NSButton *button);
+	void cocoaReadPopup(int id, NSPopUpButton *pop);
+	void cocoaReadSeg(int id, NSSegmentedControl *pop);
+#endif
+
+	
 protected:
 	// Parameter index
 	vector<ofxConfigParam*>	params;
@@ -429,6 +463,7 @@ protected:
 #endif
 #endif
 	
+	//
 	// Methods
 	void pushParam(int id, ofxConfigParam* p);
 	bool isNumber(int id);
@@ -450,6 +485,8 @@ protected:
 	void invert(int id, short i);
 	void sub(int id, int i, float val, bool clamp);
 	void add(int id, int i, float val, bool clamp);
+
+	
 };
 
 

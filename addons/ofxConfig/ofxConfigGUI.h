@@ -22,6 +22,7 @@
 #define PICKER_COLOR_OUT		ofColor(160,160,160)
 #define PICKER_COLOR_OVER		ofColor(255,255,255)
 #define PICKER_COLOR_PICKED		ofColor(255,255,0)
+#define SHADOW_COLOR			(ofColor(32.0f,32.0f,32.0f))
 
 // Auto hide timeout (millis)
 #define MILLIS_AUTO_HIDE		2000
@@ -50,7 +51,7 @@ class ofxConfigPicker;
 class ofxConfigGUI : public ofxConfig {
 public:
 #ifdef CINDER
-	ofxConfigGUI(App *app, bool automatic);
+	ofxConfigGUI(App *app, bool automatic=false);
 #else
 	ofxConfigGUI(bool automatic=true);
 #endif
@@ -63,13 +64,13 @@ public:
 	virtual void draw();
 	void setMatrix(int x, int y, float s);
 
-	void setColors(ofColor out, ofColor over, ofColor pick) { defaultColorOut = out; defaultColorOver = over; defaultColorPicked = pick; };
-	void setAutoHide(bool b) { bAutoHide = b; };
-	void show() { bHidden = false; };
-	void hide() { bHidden = true; };
-	void setAutoDraw(bool b) { bAutoDraw = b; };
-	void setDrawText(bool b) { bDrawText = b; };
-	bool shoudDrawText() { return bDrawText; }; 
+	virtual void setColors(ofColor out, ofColor over, ofColor pick) { defaultColorOut = out; defaultColorOver = over; defaultColorPicked = pick; };
+	virtual void setAutoHide(bool b) { bAutoHide = b; };
+	virtual void show() { bHidden = false; };
+	virtual void hide() { bHidden = true; };
+	virtual void setAutoDraw(bool b) { bAutoDraw = b; };
+	virtual void setDrawText(bool b) { bDrawText = b; };
+	virtual bool shoudDrawText() { return bDrawText; }; 
 	
 	//
 	// MAKE GUI
@@ -101,6 +102,11 @@ public:
 	// misc
 	virtual int readFile(const char *filename);
 	
+	// Drawers
+	static void setColor(ofColor c);
+	static void drawLine(int x1, int y1, int x2, int y2, const ofColor &color);
+	static void drawQuad(int x1, int y1, int x2, int y2, const ofColor &color, bool fill=false);
+
 	// Defaule colors
 	ofColor defaultColorOut;
 	ofColor defaultColorOver;

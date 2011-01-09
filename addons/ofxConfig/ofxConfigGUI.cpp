@@ -77,6 +77,9 @@ ofxConfigGUI::~ofxConfigGUI()
 #ifdef CFG_CATCH_LOOP_EVENTS
 void ofxConfigGUI::draw(ofEventArgs &e)
 {
+	// TODO: nao precisava de unbind, corrigir isso no multi-window
+	//ofUnbindWindow();
+	
 	if (bAutoDraw)
 		this->draw();
 }
@@ -401,18 +404,19 @@ bool ofxConfigGUI::processMouseReleased(int x, int y)
 // virtual
 int ofxConfigGUI::readFile(const char *f)
 {
-	if ( ofxConfig::readFile(f) == 0 )
-		return 0;
+	int i = ofxConfig::readFile(f);
 	// Update pickers
-	for (int n = 0 ; n < pickers.size() ; n++ )
-		pickers[n]->updatePos();
+	if ( i > 0 )
+		for (int n = 0 ; n < pickers.size() ; n++ )
+			pickers[n]->updatePos();
+	return i;
 }
 
 //
 // Return the picker
 ofxConfigPicker* ofxConfigGUI::getPicker(int id)
 {
-	ofxConfigPicker *picker;
+	//ofxConfigPicker *picker;
 	for (int n = 0 ; n < pickers.size() ; n++ )
 	{
 		if (pickers[n]->getId() == id)
@@ -434,7 +438,76 @@ unsigned int ofxConfigGUI::getMillisNow()
 
 
 
+//////////////////////////////////
+//
+// DRAWERS
+//
+//
+// Set GL color
+void ofxConfigGUI::setColor(ofColor c)
+{
+#ifdef CINDER
+	glColor3f( c.r/255.0f, c.g/255.0f, c.b/255.0f );
+#else
+	glColor4f( c.r/255.0f, c.g/255.0f, c.b/255.0f, c.a/255.0f );
+#endif
+}
+//
+// Draw a line
+void ofxConfigGUI::drawLine(int x1, int y1, int x2, int y2, const ofColor &color)
+{
+	// 1st pass = shadow, 2nd pass = color
+	for (int n = 0 ; n < 2 ; n++)
+	{
+		setColor( n==0 ? SHADOW_COLOR : color);
+		
+		// Draw!
+		int off = ( n==0 ? 1 : 0);
+#ifdef CINDER
+		gl::drawLine( Vec2f(x1+off, y1+off), Vec2f(x2+off, y2+off) );
+#else
+		glBegin(GL_LINES);
+		glVertex3f(x1+off, y1+off, 0.0f);
+		glVertex3f(x2+off, y2+off, 0.0f);
+		glEnd();
+#endif
+	}
+}
 
-
+//
+// Draw a Quad
+void ofxConfigGUI::drawQuad(int x1, int y1, int x2, int y2, const ofColor &color, bool fill)
+{
+	// Draw picker
+	// 1st pass = shadow, 2nd pass = color
+	for (int n = 0 ; n < 2 ; n++)
+	{
+		setColor( n==0 ? SHADOW_COLOR : color);
+		
+		// Draw!
+		int off = ( n==0 ? 1 : 0);
+#ifdef CINDER
+		if (fill)
+			gl::drawSolidRect( Rectf(x1+off+2, y1+off+2, x2+off-2, y2+off-2));
+		else
+		{
+			gl::drawLine( Vec2f(x1+off, y1+off), Vec2f(x2+off, y1+off) );
+			gl::drawLine( Vec2f(x2+off, y1+off), Vec2f(x2+off, y2+off) );
+			gl::drawLine( Vec2f(x2+off, y2+off), Vec2f(x1+off, y2+off) );
+			gl::drawLine( Vec2f(x1+off, y2+off), Vec2f(x1+off, y1+off) );
+		}
+#else
+		if (fill)
+			glBegin(GL_QUADS);
+		else
+			glBegin(GL_LINE_LOOP);
+		glVertex3f(x1+off, y1+off, 0.0f);
+		glVertex3f(x2+off, y1+off, 0.0f);
+		glVertex3f(x2+off, y2+off, 0.0f);
+		glVertex3f(x1+off, y2+off, 0.0f);
+		glEnd();
+#endif
+	}
+}
 
 

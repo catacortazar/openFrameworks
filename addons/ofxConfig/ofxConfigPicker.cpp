@@ -49,13 +49,18 @@ bool ofxConfigPicker::isMouseOver(int x, int y)
 // Get color for picker
 ofColor ofxConfigPicker::getCurrentColor()
 {
+	ofColor c;
 	// Set color
 	if (status == PICKER_PICKED)
-		return colorPicked;
+		c = colorPicked;
 	else if (status == PICKER_OVER)
-		return colorOver;
+		c = colorOver;
 	else //if (status == PICKER_OUT)
-		return colorOut;
+		c = colorOut;
+#ifndef CINDER
+	c.a = (255.0f * mAlpha);
+#endif
+	return c;
 }
 //
 // DRAW square picker
@@ -68,80 +73,12 @@ void ofxConfigPicker::drawPicker(int x, int y, bool fill)
 	float y2 = y + radius;
 	
 	// draw quad
-	this->drawQuad(x1, y1, x2, y2, fill);
+	cfg->drawQuad(x1, y1, x2, y2, this->getCurrentColor(), fill);
 }
 
 //////////////////////////////////
 //
 // OPENGL
-//
-// Set GL color
-void ofxConfigPicker::setColor(ofColor c)
-{
-	glColor4f( c.r/255.0f, c.g/255.0f, c.b/255.0f, mAlpha );
-}
-//
-// Draw a line
-void ofxConfigPicker::drawLine(int x1, int y1, int x2, int y2)
-{
-	// 1st pass = shadow, 2nd pass = color
-	for (int n = 0 ; n < 2 ; n++)
-	{
-		int off = ( n==0 ? 1 : 0);
-
-		// Set color
-		ofColor color = ( n==0 ? PICKER_SHADOWCOLOR : this->getCurrentColor() );
-		this->setColor(color);
-		
-		// Draw!
-#ifdef CINDER
-		gl::drawLine( Vec2f(x1+off, y1+off), Vec2f(x2+off, y2+off) );
-#else
-		glBegin(GL_LINES);
-		glVertex3f(x1+off, y1+off, 0.0f);
-		glVertex3f(x2+off, y2+off, 0.0f);
-		glEnd();
-#endif
-	}
-}
-//
-// Draw a Quad
-void ofxConfigPicker::drawQuad(int x1, int y1, int x2, int y2, bool fill)
-{
-	// Draw picker
-	// 1st pass = shadow, 2nd pass = color
-	for (int n = 0 ; n < 2 ; n++)
-	{
-		int off = ( n==0 ? 1 : 0);
-		
-		// Set color
-		ofColor color = ( n==0 ? PICKER_SHADOWCOLOR : this->getCurrentColor() );
-		this->setColor(color);
-		
-		// Draw!
-#ifdef CINDER
-		if (fill)
-			gl::drawSolidRect( Rectf(x1+off+2, y1+off+2, x2+off-2, y2+off-2));
-		else
-		{
-			gl::drawLine( Vec2f(x1+off, y1+off), Vec2f(x2+off, y1+off) );
-			gl::drawLine( Vec2f(x2+off, y1+off), Vec2f(x2+off, y2+off) );
-			gl::drawLine( Vec2f(x2+off, y2+off), Vec2f(x1+off, y2+off) );
-			gl::drawLine( Vec2f(x1+off, y2+off), Vec2f(x1+off, y1+off) );
-		}
-#else
-		if (fill)
-			glBegin(GL_QUADS);
-		else
-			glBegin(GL_LINE_LOOP);
-		glVertex3f(x1+off, y1+off, 0.0f);
-		glVertex3f(x2+off, y1+off, 0.0f);
-		glVertex3f(x2+off, y2+off, 0.0f);
-		glVertex3f(x1+off, y2+off, 0.0f);
-		glEnd();
-#endif
-	}
-}
 //
 // Draw some Text
 void ofxConfigPicker::drawLabel(int x, int y, bool line)
@@ -170,8 +107,8 @@ void ofxConfigPicker::drawLabel(int x, int y, bool line)
 void ofxConfigPicker::drawValue(int x, int y, int width, bool line, const char *val)
 {
 // Not for Cinder (bad performance)
-#ifndef CINDER
-	int xx, yy, w;
+//#ifndef CINDER
+	int xx, yy;
 	// Picker name
 	if (line)
 	{
@@ -185,7 +122,7 @@ void ofxConfigPicker::drawValue(int x, int y, int width, bool line, const char *
 		yy = y - radius - PICKER_LABEL_SPACER/2;
 	}
 	this->drawText(xx, yy, val);
-#endif
+//#endif
 }
 //
 // Draw some Text
@@ -200,8 +137,8 @@ void ofxConfigPicker::drawText(int x, int y, const char *text)
 		int off = ( n==0 ? 1 : 0);
 
 		// Set color
-		ofColor color = ( n==0 ? PICKER_SHADOWCOLOR : this->getCurrentColor() );
-		this->setColor(color);
+		ofColor color = ( n==0 ? SHADOW_COLOR : this->getCurrentColor() );
+		cfg->setColor(color);
 		
 #ifdef CINDER
 		y -= 4;
@@ -347,7 +284,7 @@ void ofxPickerSliderH::draw(float alpha)
 	float y2 = startY;
 	
 	// Slider line
-	this->drawLine(x1, y1, x2, y2);
+	cfg->drawLine(x1, y1, x2, y2, this->getCurrentColor());
 	
 	// Picker name
 	this->drawLabel(startX, startY, line);
@@ -431,7 +368,7 @@ void ofxPickerSliderV::draw(float alpha)
 	float y2 = startY + height;
 	
 	// Slider line
-	this->drawLine(x1, y1, x2, y2);
+	cfg->drawLine(x1, y1, x2, y2, this->getCurrentColor());
 	
 	// update from cfg
 	this->updatePos();

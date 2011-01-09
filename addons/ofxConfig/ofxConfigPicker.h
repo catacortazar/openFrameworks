@@ -11,7 +11,6 @@
 #include "ofxConfigGUI.h"
 
 #define PICKER_BOUND_PIXELS		1
-#define PICKER_SHADOWCOLOR		(ofColor(32.0f,32.0f,32.0f))
 #define PICKER_LABEL_SPACER		8
 #define PICKER_TEXT_HEIGHT		8
 
@@ -84,9 +83,6 @@ protected:
 #endif
 
 	// OpenGL
-	void setColor(ofColor c);
-	void drawLine(int x1, int y1, int x2, int y2);
-	void drawQuad(int x1, int y1, int x2, int y2, bool fill=false);
 	void drawLabel(int x, int y, bool line);
 	void drawValue(int x, int y, int width, bool line, const char *val);
 	void drawText(int x, int y, const char *text);
