@@ -58,6 +58,7 @@ public:
 // set main wiundow as current
 void ofUnbindWindow();
 bool ofIsMainWindow();
+bool ofHideWindow(bool hide=true);
 
 
 

@@ -28,6 +28,12 @@ bool ofIsMainWindow()
 	return (window == windows[0]);
 }
 
+//------------------------------------------------------------
+bool ofHideWindow(bool hide)
+{
+	window->hideWindow(hide);
+}
+
 
 //------------------------------------------------------------
 // null callbacks
