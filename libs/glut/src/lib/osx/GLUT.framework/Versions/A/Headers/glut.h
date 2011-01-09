@@ -431,12 +431,7 @@ extern void APIENTRY glutMainLoop(void);
 /* GLUT window sub-API. */
 extern int APIENTRY glutCreateWindow(const char *title);
 extern int APIENTRY glutCreateSubWindow(int win, int x, int y, int width, int height);
-extern void APIENTRY of_glutHideBorders(void);					// ROGER
-extern void APIENTRY of_glutSetWindowOnTop(short ontop);		// ROGER
-#ifdef __OBJC__
-@class NSOpenGLContext;
-extern NSOpenGLContext* APIENTRY of_glutGetOpengLContext(void);	// ROGER
-#endif
+extern void APIENTRY of_glutHideBorders(void);	// ROGER
 extern void APIENTRY glutDestroyWindow(int win);
 extern void APIENTRY glutPostRedisplay(void);
 #if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 11)

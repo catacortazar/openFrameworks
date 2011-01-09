@@ -73,7 +73,8 @@ const static struct name_address_pair glut_functions[] = {
    { "glutMainLoop", (const void *) glutMainLoop },
    { "glutCreateWindow", (const void *) glutCreateWindow },
    { "glutCreateSubWindow", (const void *) glutCreateSubWindow },
-	{ "of_glutHideBorders", (const void *) of_glutHideBorders },	// ROGER
+	{ "of_glutHideBorders", (const void *) of_glutHideBorders },						// ROGER
+	{ "of_glutSetWindowOnTop", (const void *) of_glutSetWindowOnTop },					// ROGER
 	{ "of_glutGetOpengLContext", (const NSOpenGLContext **) of_glutGetOpengLContext },	// ROGER
    { "glutDestroyWindow", (const void *) glutDestroyWindow },
    { "glutPostRedisplay", (const void *) glutPostRedisplay },

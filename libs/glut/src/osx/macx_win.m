@@ -507,6 +507,14 @@ void APIENTRY of_glutHideBorders(void)
 {
 	[[__glutCurrentView window] setStyleMask:NSBorderlessWindowMask];
 }
+void APIENTRY of_glutSetWindowOnTop(short ontop)
+{
+	if (ontop)
+		[[__glutCurrentView window] setLevel:NSScreenSaverWindowLevel];
+	else
+		[[__glutCurrentView window] setLevel:GLUT_NORMAL_LEVEL];
+	//[[__glutCurrentView window] makeKeyAndOrderFront: nil];
+}
 NSOpenGLContext* APIENTRY of_glutGetOpengLContext(void)
 {
 	return [__glutCurrentView openGLContext];

@@ -19,6 +19,7 @@ _glutMainLoop
 _glutCreateWindow
 _glutCreateSubWindow
 _of_glutHideBorders
+_of_glutSetWindowOnTop
 _of_glutGetOpengLContext
 _glutPostRedisplay
 _glutPostWindowRedisplay
