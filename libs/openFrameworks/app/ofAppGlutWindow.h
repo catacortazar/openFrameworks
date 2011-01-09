@@ -43,6 +43,7 @@ public:
 	void setWindowTitle(string title);
 	void setWindowPosition(int x, int y);
 	void setWindowShape(int w, int h);
+	void setWindowOnTop(bool ontop=true);
 
 	ofPoint		getWindowPosition();
 	ofPoint		getWindowSize();
@@ -71,6 +72,8 @@ public:
 	void keyboard_up_cb(unsigned char key, int x, int y);
 	void special_key_cb(int key, int x, int y) ;
 	void special_key_up_cb(int key, int x, int y) ;
+	
+	void hideWindow(bool hide=true);
 
 	string displayString;
 
@@ -108,6 +111,7 @@ public:
 	bool			isMain;
 	int				windowId;
 	bool			hideBorders;
+	bool			bIsHidden;
 };
 
 #include "ofMultiWindow.h"

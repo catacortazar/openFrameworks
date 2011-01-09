@@ -85,6 +85,7 @@ ofAppGlutWindow::ofAppGlutWindow(){
 	lastFrameTime		= 0.0;
 	displayString		= "";
 	hideBorders			= false;
+	bIsHidden			= false;
 
 }
 
@@ -294,6 +295,11 @@ void ofAppGlutWindow::setWindowShape(int w, int h){
 }
 
 //------------------------------------------------------------
+void ofAppGlutWindow::setWindowOnTop(bool ontop){
+	of_glutSetWindowOnTop(ontop?1:0);
+}
+
+//------------------------------------------------------------
 void ofAppGlutWindow::hideCursor(){
 	glutSetCursor(GLUT_CURSOR_NONE);
 }
@@ -415,8 +421,9 @@ void ofAppGlutWindow::display(void){
 				// GLUT Hack
 				//
 				// OSX:		http://github.com/rsodre/openFrameworks/tree/master/libs/glut/lib/osx/
-				// OSX WTF:	Check if your project is including GLUT framework from /System/Lybrary or ~/Library
-				//			If so, remove it and add the hacked version
+				// OSX WTF:	You'll need to copy this framework into your binary. On Xcode, right-click
+				//			the target, Add > New Building Phase > New Copy files, Destination: Framework
+				//			and then drag the framework into it.
 				// WTF!!!:	If this is bothering you, just comment #define USE_HACKED_GLUT above
 				// TODO:	still not working for the main window, make it work!
 				#ifdef USE_HACKED_GLUT
@@ -781,3 +788,22 @@ void ofAppGlutWindow::resize_cb(int w, int h) {
 
 	ofUnbindWindow();
 }
+
+void ofAppGlutWindow::hideWindow(bool hide)
+{
+	// hide
+	if (hide && !bIsHidden)
+	{
+		glutHideWindow();
+		bIsHidden = !bIsHidden;
+	}
+	// unhide
+	else if (!hide && bIsHidden)
+	{
+		glutShowWindow();
+		bIsHidden = !bIsHidden;
+	}
+
+	
+}
+
